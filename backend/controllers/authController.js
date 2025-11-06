@@ -22,7 +22,7 @@ exports.registrar = async (req, res) => {
     await Empleado.crear({
       nombreCompleto,
       correo,
-      contrasena: hashedPassword, // 👈 coincide con tu tabla
+      contrasena: hashedPassword, // coincide con tu tabla
       idRol,
     });
 
