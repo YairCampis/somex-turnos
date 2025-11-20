@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>SOMEX - Ingreso Nuevo Turno</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <link href="assets/styles.css" rel="stylesheet">
+
+  <!-- Iconos -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+</head>
+
+<body>
+
+  <!-- ========================================================= -->
+  <!-- ENCABEZADO SUPERIOR -->
+  <!-- ========================================================= -->
+  <div class="header-bar">
+      <i class="bi bi-arrow-left-circle header-icon" onclick="history.back()"></i>
+      <!--<i class="bi bi-arrow-left-circle header-icon"></i>-->
+      <h2>Ingreso Nuevo Turno</h2>
+      <i class="bi bi-check-circle header-icon"></i>
+  </div>
+
+  <div class="container my-4">
+
+    <!-- ========================================================= -->
+    <!-- FORMULARIO -->
+    <!-- ========================================================= -->
+    <div class="row g-4">
+
+      <div class="col-md-4">
+        <label class="form-label">* Cédula</label>
+        <input required name="cedula" class="form-control">
+         <!--<input type="text" class="form-control">-->
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">* Nombre Completo</label>
+        <input required name="nombre" class="form-control">
+        <!--<input type="text" class="form-control">-->
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">* Celular</label>
+        <input required name="celular" class="form-control">
+        <!--<input type="text" class="form-control">-->
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">* Placa</label>
+        <input required name="Placa" class="form-control">
+        <!--<input type="text" class="form-control">-->
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">* Tipo vehículo</label>
+        <select required name="tipo_vehiculo" class="form-select">
+        <!--<select class="form-select">-->
+          <option value="mula">Mula</option>
+          <option value="camion">Camión</option>
+          <option value="tractomula">Tractomula</option>
+          <option value="sencillo">Sencillo</option>
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Destino Final</label>
+        <input required name="destino_final" class="form-control">
+        <!--<input type="text" class="form-control">-->
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Método</label>
+        <select required name="Metodo" class="form-select">
+        <!--<select class="form-select">-->
+          <option>Físico</option>
+          <option>Digital</option>
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">* Tipo de visita</label>
+        <select required name="TipoVisita" class="form-select" style="border-color: red;">
+          <option disabled selected>Seleccionar...</option>
+          <option>Producto Terminado</option>
+          <option>Materia Prima</option>
+          <option>Interno</option>
+        </select>
+      </div>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- TABLA DE HISTORIAL -->
+    <!-- ========================================================= -->
+
+    <div class="table-responsive mt-4">
+      <table class="table table-bordered">
+        <thead class="table-header">
+          <tr>
+            <th>Turno</th>
+            <th>Cédula</th>
+            <th>Nombre</th>
+            <th>Placa</th>
+            <th>Celular</th>
+            <th>Estado</th>
+            <th>Destino Final</th>
+            <th>Tipo Visita</th>
+          </tr>
+        </thead>
+
+        <tbody id="tablaTurnos">
+          <!-- Aquí JS insertará filas -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+/* =========================================================
+   JS PARA SIMULAR LA TABLA (puedes reemplazar con tu API)
+   ========================================================= */
+const datos = [
+  { turno: 10, cedula: "1112626363", nombre: "JOSE SANCHEZ", placa: "WLW923", cel: "3113636348", estado:"Pendiente por Ingresar", destino:"PALMIRA VALLE", tipo:"Producto Terminado" },
+  { turno: 9, cedula: "13761268", nombre: "LUIS CASTRO", placa:"SXR932", cel:"3144253286", estado:"Pendiente por Ingresar", destino:"BOYACA", tipo:"Producto Terminado" },
+  { turno: 8, cedula: "1051358438", nombre:"MARTIN TRILLOS", placa:"LRN325", cel:"3147034729", estado:"Al Interior", destino:"SAN GIL", tipo:"Producto Terminado" }
+];
+
+const tbody = document.getElementById("tablaTurnos");
+
+datos.forEach((d, i) => {
+  const tr = document.createElement("tr");
+
+  if (i === 0) tr.classList.add("highlight");
+
+  tr.innerHTML = `
+    <td>${d.turno}</td>
+    <td>${d.cedula}</td>
+    <td>${d.nombre}</td>
+    <td>${d.placa}</td>
+    <td>${d.cel}</td>
+    <td>${d.estado}</td>
+    <td>${d.destino}</td>
+    <td>${d.tipo}</td>
+  `;
+  tbody.appendChild(tr);
+});
+</script>
+
+</body>
+</html>

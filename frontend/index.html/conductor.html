@@ -13,7 +13,8 @@
   <nav class="navbar navbar-light bg-white shadow-sm">
     <div class="container">
       <a class="navbar-brand fw-bold" href="index.html">SOMEX</a>
-      <button id="btnSolicitar" class="btn btn-success">Solicitar turno</button>
+      <a class="btn btn-success" href="nuevoTurno.html">Solicitar turno</a>
+      <!--<button id="btnSolicitar" class="btn btn-success" href="nuevoTurno.html">Solicitar turno</button>-->
     </div>
   </nav>
 
@@ -56,63 +57,7 @@
     </div>
   </main>
 
-  <!-- Modal Solicitar Turno -->
-  <div class="modal fade" id="turnModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <form id="turnForm" class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Solicitar turno</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body row g-2">
-          <div class="col-12 col-md-6">
-            <label class="form-label">Cédula</label>
-            <input required name="cedula" class="form-control">
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label">Nombre completo</label>
-            <input required name="nombre" class="form-control">
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label">Celular</label>
-            <input required name="celular" class="form-control">
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label">Placa</label>
-            <input required name="placa" class="form-control">
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label">Tipo vehículo</label>
-            <select required name="tipo_vehiculo" class="form-select">
-              <option value="">Seleccione…</option>
-              <option>Camión</option>
-              <option>Tractomula</option>
-              <option>Turbo</option>
-              <option>Pickup</option>
-            </select>
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="form-label">Destino final</label>
-            <input required name="destino_final" class="form-control">
-          </div>
-          <div class="col-12">
-            <label class="form-label">Tipo de visita</label>
-            <select required name="tipo_visita" class="form-select">
-              <option value="">Seleccione…</option>
-              <option value="MP">MP (Materia Prima)</option>
-              <option value="PT">PT (Producto Terminado)</option>
-            </select>
-          </div>
-          <input type="hidden" name="lat" id="lat">
-          <input type="hidden" name="lng" id="lng">
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-success" type="submit">Aceptar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
+  
   <!-- Modal Confirmación -->
   <div class="modal fade" id="okModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
