@@ -118,34 +118,54 @@
 
 
 <script>
-/* =========================================================
-   JS PARA SIMULAR LA TABLA (puedes reemplazar con tu API)
-   ========================================================= */
-const datos = [
-  { turno: 10, cedula: "1112626363", nombre: "JOSE SANCHEZ", placa: "WLW923", cel: "3113636348", estado:"Pendiente por Ingresar", destino:"PALMIRA VALLE", tipo:"Producto Terminado" },
-  { turno: 9, cedula: "13761268", nombre: "LUIS CASTRO", placa:"SXR932", cel:"3144253286", estado:"Pendiente por Ingresar", destino:"BOYACA", tipo:"Producto Terminado" },
-  { turno: 8, cedula: "1051358438", nombre:"MARTIN TRILLOS", placa:"LRN325", cel:"3147034729", estado:"Al Interior", destino:"SAN GIL", tipo:"Producto Terminado" }
-];
+// ==============================================
+// 1. Cargar turnos desde backend real
+// ==============================================
+async function cargarTurnos() {
+    try {
+        const resp = await fetch("http://localhost:4000/api/turnos");
+        const turnos = await resp.json();
+        pintarTabla(turnos);
+    } catch (error) {
+        console.error("Error cargando turnos:", error);
+    }
+}
 
-const tbody = document.getElementById("tablaTurnos");
+// ==============================================
+// 2. Pintar la tabla dinámicamente
+// ==============================================
+function pintarTabla(turnos) {
+    const tbody = document.getElementById("tablaTurnos");
+    tbody.innerHTML = "";
 
-datos.forEach((d, i) => {
-  const tr = document.createElement("tr");
+    turnos.forEach(t => {
+        const tr = document.createElement("tr");
 
-  if (i === 0) tr.classList.add("highlight");
+        tr.innerHTML = `
+            <td>${t.numeroTurno}</td>
+            <td>${t.cedula}</td>
+            <td>${t.nombreCompleto}</td>
+            <td>${t.placa}</td>
+            <td>${t.celular}</td>
+            <td>${t.estado}</td>
+            <td>${t.destinoFinal}</td>
+            <td>${t.tipoVisita}</td>
+        `;
 
-  tr.innerHTML = `
-    <td>${d.turno}</td>
-    <td>${d.cedula}</td>
-    <td>${d.nombre}</td>
-    <td>${d.placa}</td>
-    <td>${d.cel}</td>
-    <td>${d.estado}</td>
-    <td>${d.destino}</td>
-    <td>${d.tipo}</td>
-  `;
-  tbody.appendChild(tr);
-});
+        tbody.appendChild(tr);
+    });
+}
+
+// ==============================================
+// 3. Recargar tabla automáticamente cada 5 segundos
+// ==============================================
+setInterval(cargarTurnos, 5000);
+
+// ==============================================
+// 4. Cargar tabla al abrir la página
+// ==============================================
+document.addEventListener("DOMContentLoaded", cargarTurnos);
+
 </script>
 
 <!-- =============================================== 
@@ -210,6 +230,9 @@ document.getElementById("btnGuardarTurno").addEventListener("click", async () =>
             title: "Turno asignado",
             text: `Turno #${turno.numeroTurno} asignado correctamente.`
         });
+
+        // actualizar tabla inmediatamente
+        cargarTurnos();
 
         //Limpiar formulario
         document.getElementById("formTurno").reset();

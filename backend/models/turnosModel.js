@@ -5,7 +5,7 @@ const getAllTurnos = async () => {
   const [rows] = await pool.query(
     `SELECT t.idTurno, LPAD(t.numeroTurno, 2, '0') AS numeroTurno, 
             t.fecha, t.horaAsignacion, t.estado,
-            c.nombreCompleto AS conductor, c.placa
+            c.nombreCompleto AS conductor, c.cedula, c.placa, celular, t.destinoFinal, t.tipoVisita
      FROM Turnos t
      JOIN Conductores c ON t.idConductor = c.idConductor
      ORDER BY t.fecha DESC, t.numeroTurno ASC`
