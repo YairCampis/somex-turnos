@@ -95,7 +95,7 @@
           <tr>
             <th>Turno</th>
             <th>Cédula</th>
-            <th>Nombre</th>
+            <th>Conductor</th>
             <th>Placa</th>
             <th>Celular</th>
             <th>Estado</th>
@@ -144,7 +144,7 @@ function pintarTabla(turnos) {
         tr.innerHTML = `
             <td>${t.numeroTurno}</td>
             <td>${t.cedula}</td>
-            <td>${t.nombreCompleto}</td>
+            <td>${t.conductor}</td>
             <td>${t.placa}</td>
             <td>${t.celular}</td>
             <td>${t.estado}</td>
@@ -183,17 +183,17 @@ document.getElementById("btnGuardarTurno").addEventListener("click", async () =>
     const celular = document.getElementById("celular").value.trim();
     const tipoVehiculo = document.getElementById("tipo_vehiculo").value;
     const destinoFinal = document.getElementById("destinoFinal").value.trim();
-    const tipoVisita = document.getElementById("TipoVisita").value;
+    const tipoVisita = document.getElementById("tipoVisita").value;
 
     // Validar campos obligatorios
-    if (!nombre || !placa || !cedula || !celular || !tipoVehiculo || !tipoVisita)
+    if (!nombre || !placa || !cedula || !celular || !tipoVehiculo || !tipoVisita){
         Swal.fire({
             icon: "warning",
             title: "Campos incompletos",
             text: "Por favor diligencie todos los campos obligatorios."
         });
         return;
-    
+    }
 
     try {
         const respBuscar = await fetch(`http://localhost:4000/api/conductores/buscar/${cedula}`);
