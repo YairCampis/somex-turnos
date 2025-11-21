@@ -1,5 +1,23 @@
 const conductoresModel = require("../models/conductoresModel");
 
+exports.getConductorByDocumento = async (req, res) => {
+  try {
+    const { cedula } = req.params;
+    const conductor = await conductoresModel.getConductorByDocumento(cedula);
+
+    if (!conductor) {
+      return res.status(404).json(null);
+    }
+
+    res.json(conductor);
+
+  } catch (error) {
+    console.error("Error al obtener conductor:", error);
+    res.status(500).json({ error: "Error al buscar conductor" });
+  }
+};
+
+
 exports.getAllConductores = async (req, res) => {
   try {
     const conductores = await conductoresModel.getAllConductores();

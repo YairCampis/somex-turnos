@@ -1,5 +1,15 @@
 const pool = require("../config/dbConfig");
 
+// Obtener un conductor por numero de cedula
+const getConductorByDocumento = async (cedula) => {
+  const [rows] = await pool.query(
+    "SELECT * FROM Conductores WHERE cedula = ?",
+    [cedula]
+  );
+  return rows.length > 0 ? rows[0] : null;
+};
+
+
 // Obtener todos los conductores
 const getAllConductores = async () => {
   const [rows] = await pool.query("SELECT * FROM Conductores");
@@ -35,4 +45,5 @@ module.exports = {
   createConductor,
   updateConductor,
   deleteConductor,
+  getConductorByDocumento,
 };

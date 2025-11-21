@@ -23,7 +23,7 @@
       <i class="bi bi-arrow-left-circle header-icon" onclick="history.back()"></i>
       <!--<i class="bi bi-arrow-left-circle header-icon"></i>-->
       <h2>Ingreso Nuevo Turno</h2>
-      <i class="bi bi-check-circle header-icon"></i>
+      <i id="btnGuardarTurno" class="bi bi-check-circle header-icon"></i>
   </div>
 
   <div class="container my-4">
@@ -31,36 +31,35 @@
     <!-- ========================================================= -->
     <!-- FORMULARIO -->
     <!-- ========================================================= -->
-    <div class="row g-4">
+    
+    <form id="formTurno">
+      <div class="row g-4">
 
       <div class="col-md-4">
         <label class="form-label">* Cédula</label>
-        <input required name="cedula" class="form-control">
-         <!--<input type="text" class="form-control">-->
+        <input type="text" id="cedula" class="form-control" placeholder="Digite su Cédula" required>
       </div>
 
       <div class="col-md-4">
         <label class="form-label">* Nombre Completo</label>
-        <input required name="nombre" class="form-control">
-        <!--<input type="text" class="form-control">-->
+        <input type="text" id="nombre" class="form-control" placeholder="Digite Nombre completo" required>
       </div>
 
       <div class="col-md-4">
         <label class="form-label">* Celular</label>
-        <input required name="celular" class="form-control">
-        <!--<input type="text" class="form-control">-->
+        <input type="text" id="celular" class="form-control" placeholder="Digite número de celular" required>
       </div>
 
       <div class="col-md-4">
         <label class="form-label">* Placa</label>
-        <input required name="Placa" class="form-control">
-        <!--<input type="text" class="form-control">-->
+        <input type="text" id="placa" class="form-control" placeholder="Digite placa del vehículo" required>
       </div>
 
       <div class="col-md-4">
         <label class="form-label">* Tipo vehículo</label>
-        <select required name="tipo_vehiculo" class="form-select">
+        <select id="tipo_vehiculo" class="form-select" required>
         <!--<select class="form-select">-->
+          <option disabled selected>Seleccionar...</option>
           <option value="mula">Mula</option>
           <option value="camion">Camión</option>
           <option value="tractomula">Tractomula</option>
@@ -70,22 +69,12 @@
 
       <div class="col-md-4">
         <label class="form-label">Destino Final</label>
-        <input required name="destino_final" class="form-control">
-        <!--<input type="text" class="form-control">-->
-      </div>
-
-      <div class="col-md-4">
-        <label class="form-label">Método</label>
-        <select required name="Metodo" class="form-select">
-        <!--<select class="form-select">-->
-          <option>Físico</option>
-          <option>Digital</option>
-        </select>
+        <input type="text" id="destinoFinal" class="form-control" placeholder="Digite su destino final" required>
       </div>
 
       <div class="col-md-4">
         <label class="form-label">* Tipo de visita</label>
-        <select required name="TipoVisita" class="form-select" style="border-color: red;">
+        <select id="tipoVisita" class="form-select" required>
           <option disabled selected>Seleccionar...</option>
           <option>Producto Terminado</option>
           <option>Materia Prima</option>
@@ -94,6 +83,7 @@
       </div>
 
     </div>
+  </form>
 
     <!-- ========================================================= -->
     <!-- TABLA DE HISTORIAL -->
@@ -120,6 +110,12 @@
       </table>
     </div>
   </div>
+
+  <!-- =============================================== -->
+  <!-- LIBRERÍAS EXTERNAS -->
+  <!-- =============================================== -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
 <script>
 /* =========================================================
@@ -150,6 +146,84 @@ datos.forEach((d, i) => {
   `;
   tbody.appendChild(tr);
 });
+</script>
+
+<!-- =============================================== 
+ AQUI PEGAS EL JS DEL BOTON btnGuardarTurno -
+=============================================== -->
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.getElementById("btnGuardarTurno").addEventListener("click", async () => {
+    const nombre = document.getElementById("nombre").value.trim();
+    const placa = document.getElementById("placa").value.trim();
+    const cedula = document.getElementById("cedula").value.trim();
+    const celular = document.getElementById("celular").value.trim();
+    const tipoVehiculo = document.getElementById("tipo_vehiculo").value;
+    const destinoFinal = document.getElementById("destinoFinal").value.trim();
+    const tipoVisita = document.getElementById("TipoVisita").value;
+
+    // Validar campos obligatorios
+    if (!nombre || !placa || !cedula || !celular || !tipoVehiculo || !tipoVisita)
+        Swal.fire({
+            icon: "warning",
+            title: "Campos incompletos",
+            text: "Por favor diligencie todos los campos obligatorios."
+        });
+        return;
+    
+
+    try {
+        const respBuscar = await fetch(`http://localhost:4000/api/conductores/buscar/${cedula}`);
+        let conductor = await respBuscar.json();
+
+        if (!conductor || !conductor.idConductor) {
+            const respCrear = await fetch("http://localhost:4000/api/conductores", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    cedula: cedula,
+                    nombreCompleto: nombre,
+                    celular: celular,
+                    placa: placa,
+                    tipoVehiculo: tipoVehiculo,
+                    destinoFinal: destinoFinal,
+                    tipoVisita: tipoVisita
+                })
+            });
+            conductor = await respCrear.json();
+        }
+
+        //Crear turno
+        const respTurno = await fetch("http://localhost:4000/api/turnos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ idConductor: conductor.idConductor })
+        });
+        const turno = await respTurno.json();
+
+        //Mensaje de éxito
+        Swal.fire({
+            icon: "success",
+            title: "Turno asignado",
+            text: `Turno #${turno.numeroTurno} asignado correctamente.`
+        });
+
+        //Limpiar formulario
+        document.getElementById("formTurno").reset();
+
+    } catch (error) {
+        console.error(error);
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Ocurrió un problema al asignar el turno."
+        });
+    }
+});
+
 </script>
 
 </body>
