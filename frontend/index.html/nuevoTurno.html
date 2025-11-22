@@ -38,28 +38,32 @@
       <div class="col-md-4">
         <label class="form-label">* Cédula</label>
         <input type="text" id="cedula" class="form-control" placeholder="Digite su Cédula" required>
+        <div class="invalid-feedback">Ingrese la cédula.</div>
       </div>
 
       <div class="col-md-4">
         <label class="form-label">* Nombre Completo</label>
         <input type="text" id="nombre" class="form-control" placeholder="Digite Nombre completo" required>
+        <div class="invalid-feedback">Ingrese Nombre Completo</div>
       </div>
 
       <div class="col-md-4">
         <label class="form-label">* Celular</label>
         <input type="text" id="celular" class="form-control" placeholder="Digite número de celular" required>
+        <div class="invalid-feedback">Ingrese Celular</div>
       </div>
 
       <div class="col-md-4">
         <label class="form-label">* Placa</label>
         <input type="text" id="placa" class="form-control" placeholder="Digite placa del vehículo" required>
+        <div class="invalid-feedback">Ingrese placa</div>
       </div>
 
       <div class="col-md-4">
         <label class="form-label">* Tipo vehículo</label>
         <select id="tipo_vehiculo" class="form-select" required>
         <!--<select class="form-select">-->
-          <option disabled selected>Seleccionar...</option>
+          <option value="" disabled selected>Seleccionar...</option>
           <option value="mula">Mula</option>
           <option value="camion">Camión</option>
           <option value="tractomula">Tractomula</option>
@@ -70,15 +74,15 @@
       <div class="col-md-4">
         <label class="form-label">Destino Final</label>
         <input type="text" id="destinoFinal" class="form-control" placeholder="Digite su destino final" required>
+        <div class="invalid-feedback">Ingrese Destino Final</div>
       </div>
 
       <div class="col-md-4">
         <label class="form-label">* Tipo de visita</label>
         <select id="tipoVisita" class="form-select" required>
-          <option disabled selected>Seleccionar...</option>
+          <option value="" disabled selected>Seleccionar...</option>
           <option>Producto Terminado</option>
           <option>Materia Prima</option>
-          <option>Interno</option>
         </select>
       </div>
 
@@ -169,7 +173,7 @@ document.addEventListener("DOMContentLoaded", cargarTurnos);
 </script>
 
 <!-- =============================================== 
- AQUI PEGAS EL JS DEL BOTON btnGuardarTurno -
+ BOTON btnGuardarTurno -
 =============================================== -->
 
 
@@ -177,6 +181,7 @@ document.addEventListener("DOMContentLoaded", cargarTurnos);
 
 <script>
 document.getElementById("btnGuardarTurno").addEventListener("click", async () => {
+
     const nombre = document.getElementById("nombre").value.trim();
     const placa = document.getElementById("placa").value.trim();
     const cedula = document.getElementById("cedula").value.trim();
@@ -185,8 +190,26 @@ document.getElementById("btnGuardarTurno").addEventListener("click", async () =>
     const destinoFinal = document.getElementById("destinoFinal").value.trim();
     const tipoVisita = document.getElementById("tipoVisita").value;
 
+        
+    // QUITAR ERRORES ANTERIORES
+   
+    document.querySelectorAll(".is-invalid").forEach(el => {
+        el.classList.remove("is-invalid");
+
+      });
+
+    // 2. MARCAR CAMPOS VACÍOS
+    
+    if (!cedula) document.getElementById("cedula").classList.add("is-invalid");
+    if (!nombre) document.getElementById("nombre").classList.add("is-invalid");
+    if (!celular) document.getElementById("celular").classList.add("is-invalid");
+    if (!destinoFinal) document.getElementById("destinoFinal").classList.add("is-invalid");
+    if (!placa) document.getElementById("placa").classList.add("is-invalid");
+    if (!tipoVehiculo) document.getElementById("tipo_vehiculo").classList.add("is-invalid");
+    if (!tipoVisita) document.getElementById("tipoVisita").classList.add("is-invalid");
+
     // Validar campos obligatorios
-    if (!nombre || !placa || !cedula || !celular || !tipoVehiculo || !tipoVisita){
+    if (!nombre || !placa || !cedula || !celular || !tipoVehiculo || !destinoFinal || !tipoVisita){
         Swal.fire({
             icon: "warning",
             title: "Campos incompletos",
@@ -220,7 +243,11 @@ document.getElementById("btnGuardarTurno").addEventListener("click", async () =>
         const respTurno = await fetch("http://localhost:4000/api/turnos", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ idConductor: conductor.idConductor })
+            body: JSON.stringify({ 
+              idConductor: conductor.idConductor,
+              destinoFinal: destinoFinal,
+              tipoVisita: tipoVisita 
+            })
         });
         const turno = await respTurno.json();
 
@@ -246,6 +273,16 @@ document.getElementById("btnGuardarTurno").addEventListener("click", async () =>
         });
     }
 });
+
+function marcarInvalido(campo) {
+    campo.classList.add("is-invalid");
+}
+
+function limpiarErrores() {
+    document.querySelectorAll(".is-invalid").forEach(el => {
+        el.classList.remove("is-invalid");
+    });
+}
 
 </script>
 

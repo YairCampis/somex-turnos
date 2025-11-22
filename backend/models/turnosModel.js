@@ -15,7 +15,7 @@ const getAllTurnos = async () => {
 
 // Crear turno con consecutivo que reinicia cada día
 const createTurno = async (turno) => {
-  const { idConductor } = turno;
+  const { idConductor, destinoFinal, tipoVisita } = turno;
 
   // Buscar el último turno asignado en la fecha de hoy
   const [rows] = await pool.query(
@@ -27,8 +27,8 @@ const createTurno = async (turno) => {
 
   // Insertar turno → por defecto con estado Pendiente y fecha de hoy
   const [result] = await pool.query(
-    "INSERT INTO Turnos (idConductor, numeroTurno, estado, fecha) VALUES (?, ?, ?, CURDATE())",
-    [idConductor, siguienteTurno, "Pendiente"]
+    "INSERT INTO Turnos (idConductor, numeroTurno, estado, fecha, destinoFinal, tipoVisita) VALUES (?, ?, 'Pendiente', CURDATE(), ?, ?)",
+    [idConductor, siguienteTurno, destinoFinal, tipoVisita]
   );
 
   return { 
@@ -36,7 +36,9 @@ const createTurno = async (turno) => {
     idConductor, 
     numeroTurno: siguienteTurno.toString().padStart(2, "0"), 
     estado: "Pendiente", 
-    fecha: new Date().toISOString().split("T")[0] 
+    fecha: new Date().toISOString().split("T")[0],
+    destinoFinal,
+    tipoVisita 
   };
 };
 
