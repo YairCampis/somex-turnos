@@ -124,14 +124,14 @@ body {
   gap: 12px;
 }
 
-/* TARJETAS COMPACTAS */
+/* TARJETAS COMPACTAS (Ahora más grandes) */
 .card-turno {
-  width: 200px;
+  width: 260px;
   background: white;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid #e2e8f0;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
@@ -154,10 +154,10 @@ body {
 .badge-turno {
   background: #fef3c7;
   color: #92400e;
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-weight: 700;
-  font-size: 14px;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 18px;
 }
 
 .badge-turno.atendido {
@@ -176,8 +176,8 @@ body {
 }
 
 .btn-edit {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border: none;
   background: #f1f5f9;
   color: #64748b;
@@ -185,7 +185,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 18px;
   transition: 0.2s;
 }
 
@@ -195,17 +195,17 @@ body {
 }
 
 .card-content {
-  padding: 12px;
-  font-size: 13px;
-  line-height: 1.5;
+  padding: 15px;
+  font-size: 15px;
+  line-height: 1.6;
 }
 
 .driver-name {
   font-weight: 700;
-  font-size: 14px;
+  font-size: 18px;
   color: #1e293b;
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -220,7 +220,7 @@ body {
 }
 
 .card-info-item i {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 /* ESTADOS DINÁMICOS EN TARJETAS */
@@ -539,13 +539,16 @@ function render() {
             <i class="bi bi-pencil-square"></i>
           </button>
         </div>
-        <div class="card-content" onclick="abrirDetalle(${t.idTurno})" style="cursor:pointer">
+        <div class="card-content">
           <span class="driver-name" title="${t.conductor}">${t.conductor}</span>
           <div class="card-info-item">
             <i class="bi bi-telephone"></i> ${t.celular || 'N/A'}
           </div>
           <div class="card-info-item">
             <i class="bi bi-truck"></i> ${t.placa}
+          </div>
+          <div class="card-info-item">
+            <i class="bi bi-person-vcard"></i> ${t.cedula || 'N/A'}
           </div>
           <div class="card-info-item">
             <i class="bi bi-clock"></i> ${t.horaAsignacion}

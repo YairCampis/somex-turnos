@@ -55,6 +55,43 @@
       #map {
         height: 300px;
       }
+
+      /* Estilos Modernos Lista de Turnos */
+      #turnList .list-group-item {
+        border: none;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(5px);
+        margin-bottom: 8px;
+        border-radius: 12px !important;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.05);
+      }
+
+      #turnList .list-group-item:hover {
+        background: #fff;
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      }
+
+      .turno-header {
+        font-weight: 700;
+        color: #333;
+        font-size: 0.95rem;
+      }
+
+      .placa-text {
+        font-weight: 700;
+        color: #333;
+        font-size: 0.95rem;
+      }
+
+      .status-badge {
+        font-size: 0.75rem;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
     </style>
   </head>
 
@@ -206,10 +243,22 @@
 
           turnos.forEach((t) => {
             const li = document.createElement("li");
-            li.className = "list-group-item";
-            // El backend retorna numeroTurno sin pad en este endpoint específico
+            li.className = "list-group-item d-flex justify-content-between align-items-center";
+            
             const numLabel = String(t.numeroTurno).padStart(2, "0");
-            li.innerText = `Turno ${numLabel} - ${t.estado || "Pendiente"}`;
+            const placaText = t.placa ? ` - Placa ${t.placa}` : " - <small class='text-muted'>Sin placa</small>";
+            
+            let statusClass = 'bg-secondary';
+            if(t.estado === 'Atendido') statusClass = 'bg-success';
+            if(t.estado === 'Cancelado') statusClass = 'bg-danger';
+
+            li.innerHTML = `
+              <div>
+                <span class="turno-header">Turno ${numLabel}</span>
+                <span class="placa-text">${placaText}</span>
+              </div>
+              <span class="badge status-badge ${statusClass}">${t.estado || "Pendiente"}</span>
+            `;
             lista.appendChild(li);
           });
 

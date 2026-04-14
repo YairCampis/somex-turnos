@@ -84,9 +84,9 @@ const createTurno = async (turno) => {
   // Insertar turno
   const [result] = await pool.query(
     `INSERT INTO Turnos 
-     (idConductor, numeroTurno, estado, fecha, horaAsignacion, destinoFinal, tipoVisita) 
-     VALUES (?, ?, 'Pendiente', ?, ?, ?, ?)`,
-    [idConductor, siguienteTurno, fecha, hora, toSentenceCase(destinoFinal), toSentenceCase(tipoVisita)],
+     (idConductor, numeroTurno, estado, fecha, horaAsignacion, destinoFinal, tipoVisita, placa) 
+     VALUES (?, ?, 'Pendiente', ?, ?, ?, ?, ?)`,
+    [idConductor, siguienteTurno, fecha, hora, toSentenceCase(destinoFinal), toSentenceCase(tipoVisita), placa],
   );
 
   const idTurno = result.insertId;
@@ -206,7 +206,7 @@ async function obtenerResumenHoy(idConductor) {
 async function obtenerTurnosHoy() {
   const [rows] = await pool.query(
     `
-    SELECT numeroTurno, estado
+    SELECT numeroTurno, estado, placa
     FROM Turnos
     WHERE fecha = ?
     ORDER BY numeroTurno ASC;

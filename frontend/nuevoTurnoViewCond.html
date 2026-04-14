@@ -546,13 +546,12 @@ localStorage.removeItem("turnoFinalizado");
               text: `Turno #${turno.numeroTurno || turno.idTurno} asignado correctamente.`,
             });
 
-             // bloquear botón
-            document.querySelector("#btnGuardarTurno").style.pointerEvents = "none";
-           
-            // pequeño delay para UX
-                setTimeout(() => {
-                  window.location.href = "conductor.html";
-                }, 500);
+            // Bloquear botón para evitar doble envío
+            const btnGuardar = document.querySelector("#btnGuardarTurno");
+            if (btnGuardar) btnGuardar.style.pointerEvents = "none";
+
+            // Redirigir solo después de que el usuario cierre el modal
+            window.location.href = "conductor.html";
 
             // ACTUALIZAR TABLA
             cargarTurnos();

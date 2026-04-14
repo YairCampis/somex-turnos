@@ -6,7 +6,7 @@
 class SMSSimulator {
   constructor() {
     this.apiBase = window.API_BASE || "http://localhost:4000";
-    this.pollInterval = 5000; // 5 seconds
+    this.pollInterval = 3000; // 3 seconds
     this.init();
   }
 
@@ -136,8 +136,11 @@ class SMSSimulator {
       const notifications = await response.json();
       
       for (const sms of notifications) {
+        const smsId = sms.id || sms.id_notificacion;
+        if (!smsId) continue;
+        
         this.showNotification(sms);
-        await this.markAsSent(sms.id);
+        await this.markAsSent(smsId);
       }
     } catch (error) {
       console.error("SMS Simulator Error:", error);
