@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+ <meta charset="utf-8">
+  <title>Turnos Conductores</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <link href="assets/styles.css" rel="stylesheet">
+
+  <!-- Iconos -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#f5f5f5;
+}
+
+/* HEADER */
+.header{
+background:#2f8f2f;
+color:white;
+padding:10px;
+text-align:center;
+font-size:22px;
+}
+
+/* FILTRO */
+.filtro{
+background:#b5c92c;
+padding:10px;
+display:flex;
+justify-content:space-between;
+}
+
+/* CONTENEDOR */
+.container-main{
+display:flex;
+height:90vh;
+}
+
+/* COLUMNAS */
+.columna{
+flex:1;
+padding:10px;
+overflow-y:auto;
+}
+
+.izquierda{
+border-right:2px solid #ccc;
+}
+
+/* TARJETAS */
+.card-turno{
+display:flex;
+align-items:center;
+margin-bottom:6px;
+background:#f1f1f1;
+border-radius:4px;
+font-size:13px;
+height:70px;
+}
+
+.card-left{
+width:55px;
+background:orange;
+color:white;
+text-align:center;
+padding:5px;
+}
+
+.card-left.verde{
+background:#2f8f2f;
+}
+
+.numero{
+font-size:20px;
+font-weight:bold;
+}
+
+.card-body{
+padding:6px;
+line-height:1.2;
+flex:1;
+}
+
+.btn-go{
+width:32px;
+height:32px;
+border:none;
+border-radius:50%;
+background:orange;
+color:white;
+}
+
+.btn-go.verde{
+background:#2f8f2f;
+}
+
+.header{
+background:#2f8f2f;
+color:white;
+padding:10px 15px;
+display:flex;
+align-items:center;
+gap:10px;
+font-size:22px;
+}
+
+.header-icon{
+font-size:28px;
+cursor:pointer;
+}
+
+.header-icon:hover{
+opacity:0.8;
+}
+
+.titulo{
+flex:1;
+text-align:center;
+}
+
+.header{
+position:relative;
+display:flex;
+align-items:center;
+justify-content:space-between;
+background:#2f8f2f;
+padding:10px 15px;
+color:white;
+}
+
+/* ICONOS */
+.header-icon{
+font-size:28px;
+cursor:pointer;
+transition:0.2s;
+}
+
+.header-icon:hover{
+transform:scale(1.1);
+opacity:0.85;
+}
+
+/* POSICIONES */
+.left{
+z-index:1;
+}
+
+.right{
+z-index:1;
+}
+
+/* TÍTULO CENTRADO PERFECTO */
+.titulo{
+position:absolute;
+left:50%;
+transform:translateX(-50%);
+font-size:22px;
+font-weight:500;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- ICONOS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<div class="header">
+  <div class="d-flex align-items-center gap-2 left">
+    <i class="bi bi-arrow-left-circle header-icon" onclick="history.back()" title="Atrás"></i>
+    <span id="userInfo" style="font-weight: 500; font-size: 13px; color: white;"></span>
+  </div>
+  <span class="titulo">Turnos Somex</span>
+  <i class="bi bi-truck header-icon right" onclick="window.location.href='nuevoTurno.html'"></i>
+</div>
+
+
+<div class="filtro">
+<div>Pendientes: <span id="countPendientes">0</span></div>
+<div>Gestionados: <span id="countGestionados">0</span></div>
+</div>
+
+<div class="container-main">
+
+<div class="columna izquierda" id="pendientes"></div>
+
+<div class="columna" id="gestionados"></div>
+
+</div>
+
+<!-- MODAL DETALLE -->
+<div class="modal fade" id="detalleModal">
+<div class="modal-dialog modal-xl">
+<div class="modal-content">
+
+<div class="modal-header">
+<h5>Detalle del Turno</h5>
+<button class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+
+<div class="row">
+
+<div class="col-md-2">
+<label>Turno</label>
+<div class="bg-warning text-white text-center p-3 fs-4" id="dTurno"></div>
+</div>
+
+<div class="col-md-5">
+<label>Nombre</label>
+<input type="text" id="dNombre" class="form-control">
+</div>
+
+<div class="col-md-5">
+<label>Celular</label>
+<input type="text" id="dCelular" class="form-control">
+</div>
+
+<div class="col-md-4 mt-3">
+<label>Cédula</label>
+<input type="text" id="dCedula" class="form-control">
+</div>
+
+<div class="col-md-4 mt-3">
+<label>Placa</label>
+<input type="text" id="dPlaca" class="form-control">
+</div>
+
+<div class="col-md-4 mt-3">
+<label>Hora</label>
+<input type="time" id="dHora" class="form-control">
+</div>
+
+<div class="col-md-4 mt-3">
+<label>Estado</label>
+<select id="dEstado" class="form-control">
+<option value="pendiente">Pendiente</option>
+<option value="gestionado">Gestionado</option>
+</select>
+</div>
+
+<div class="col-md-8 mt-3">
+<label>Destino</label>
+<input type="text" id="dDestino" class="form-control">
+</div>
+
+<div class="col-md-12 mt-3">
+<textarea id="dObs" class="form-control" placeholder="Observaciones"></textarea>
+</div>
+
+</div>
+
+</div>
+
+<div class="modal-footer">
+<button class="btn btn-success" onclick="guardarCambios()">Actualizar</button>
+<button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+</div>
+
+</div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+// DATA DE PRUEBA
+let turnos = [
+{ id:1, nombre:"Juan Perez", telefono:"3001234567", placa:"ABC123", cedula:"12345", destino:"Barranquilla", hora:"07:30", estado:"pendiente" },
+{ id:2, nombre:"Carlos Ruiz", telefono:"3112223333", placa:"XYZ987", cedula:"67890", destino:"Cartagena", hora:"08:10", estado:"pendiente" },
+{ id:3, nombre:"Luis Gomez", telefono:"3209998888", placa:"TTT555", cedula:"11223", destino:"Santa Marta", hora:"09:00", estado:"gestionado" },
+{ id:4, nombre:"Ana Lopez", telefono:"3015554444", placa:"AAA111", cedula:"44556", destino:"Sincelejo", hora:"10:15", estado:"gestionado" }
+];
+
+let turnoActual = null;
+
+// RENDER
+function render(){
+
+const pendientesDiv = document.getElementById("pendientes");
+const gestionadosDiv = document.getElementById("gestionados");
+
+pendientesDiv.innerHTML="";
+gestionadosDiv.innerHTML="";
+
+let countP=0;
+let countG=0;
+
+turnos.forEach(t=>{
+
+const card = `
+<div class="card-turno">
+
+<div class="card-left ${t.estado==="gestionado" ? "verde":""}">
+<div class="numero">${t.id}</div>
+</div>
+
+<div class="card-body">
+<strong>${t.nombre}</strong><br>
+📞 ${t.telefono}<br>
+🚚 ${t.placa}<br>
+⏰ ${t.hora}
+</div>
+
+<div class="p-2">
+<button class="btn-go ${t.estado==="gestionado" ? "verde":""}"
+onclick="abrirDetalle(${t.id})">➤</button>
+</div>
+
+</div>
+`;
+
+if(t.estado==="pendiente"){
+pendientesDiv.innerHTML += card;
+countP++;
+}else{
+gestionadosDiv.innerHTML += card;
+countG++;
+}
+
+});
+
+document.getElementById("countPendientes").innerText = countP;
+document.getElementById("countGestionados").innerText = countG;
+
+}
+
+// ABRIR MODAL
+function abrirDetalle(id){
+
+turnoActual = turnos.find(t => t.id === id);
+
+document.getElementById("dTurno").innerText = turnoActual.id;
+document.getElementById("dNombre").value = turnoActual.nombre;
+document.getElementById("dCelular").value = turnoActual.telefono;
+document.getElementById("dPlaca").value = turnoActual.placa;
+document.getElementById("dCedula").value = turnoActual.cedula || "";
+document.getElementById("dDestino").value = turnoActual.destino || "";
+document.getElementById("dHora").value = turnoActual.hora;
+document.getElementById("dEstado").value = turnoActual.estado;
+
+const modal = new bootstrap.Modal(document.getElementById("detalleModal"));
+modal.show();
+
+}
+
+// GUARDAR CAMBIOS
+function guardarCambios(){
+
+turnoActual.nombre = document.getElementById("dNombre").value;
+turnoActual.telefono = document.getElementById("dCelular").value;
+turnoActual.placa = document.getElementById("dPlaca").value;
+turnoActual.hora = document.getElementById("dHora").value;
+turnoActual.estado = document.getElementById("dEstado").value;
+
+Swal.fire("Actualizado correctamente","","success");
+
+bootstrap.Modal.getInstance(document.getElementById("detalleModal")).hide();
+
+render();
+
+}
+
+// FUNCION LOGIN INFO
+document.addEventListener("DOMContentLoaded", () => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (user) {
+    let rolName = "Usuario";
+    if (user.rol == 1) rolName = "Administrador";
+    if (user.rol == 2) rolName = "Logística";
+    if (user.rol == 3) rolName = "Portería";
+    const infoDiv = document.getElementById("userInfo");
+    if (infoDiv) infoDiv.innerText = `${user.nombre} - Rol: ${rolName}`;
+  }
+});
+
+function logout() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  window.location.href = "index.html";
+}
+
+// INIT
+render();
+
+</script>
+
+</body>
+</html>

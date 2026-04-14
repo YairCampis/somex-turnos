@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+ <meta charset="utf-8">
+  <title>Logística | Gestión de Turnos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <link href="assets/styles.css" rel="stylesheet">
+
+  <!-- Iconos -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #f8fafc;
+  color: #1e293b;
+}
+
+/* HEADER */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #1e5e1e 0%, #2f8f2f 100%);
+  padding: 12px 24px;
+  color: white;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.header-icon {
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 8px;
+  border-radius: 50%;
+}
+
+.header-icon:hover {
+  background: rgba(255,255,255,0.1);
+  transform: scale(1.1);
+}
+
+.titulo {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* DASHBOARD STATS */
+.filtro {
+  background: #ffffff;
+  padding: 15px 24px;
+  display: flex;
+  gap: 30px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.stat-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.stat-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+#countPendientes { color: #f59e0b; }
+#countGestionados { color: #10b981; }
+
+/* CONTENEDOR PRINCIPAL */
+.container-main {
+  display: flex;
+  height: calc(100vh - 120px);
+  gap: 10px;
+  padding: 10px;
+}
+
+/* COLUMNAS */
+.columna {
+  flex: 1;
+  background: #f1f5f9;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.columna-header {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.scroll-area {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap; 
+  align-content: flex-start;
+  gap: 12px;
+}
+
+/* TARJETAS COMPACTAS */
+.card-turno {
+  width: 200px;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.card-turno:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+  border-color: #cbd5e1;
+}
+
+.card-top {
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.badge-turno {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.badge-turno.atendido {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge-turno.cancelado {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.badge-turno.pendiente {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.btn-edit {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+.btn-edit:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.card-content {
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.driver-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1e293b;
+  display: block;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+
+.card-info-item i {
+  font-size: 12px;
+}
+
+/* ESTADOS DINÁMICOS EN TARJETAS */
+.card-turno.border-pendiente { border-left: 4px solid #f59e0b; }
+.card-turno.border-atendido { border-left: 4px solid #10b981; }
+.card-turno.border-cancelado { border-left: 4px solid #94a3b8; }
+
+/* MODAL STYLING */
+.modal-content {
+  border-radius: 16px;
+  border: none;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+}
+
+.modal-header {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 20px 24px;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.form-label {
+  font-weight: 600;
+  font-size: 13px;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.form-control, .form-select {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  background-color: #f8fafc; /* Color deshabilitado suave */
+}
+
+/* Inputs habilitados */
+.form-control:not(:disabled), .form-select:not(:disabled) {
+  background-color: white;
+}
+
+.form-control:focus {
+  border-color: #2f8f2f;
+  box-shadow: 0 0 0 3px rgba(47, 143, 47, 0.1);
+}
+
+/* TOGGLE SWITCHES */
+.switch-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #e2e8f0;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider { background-color: #10b981; }
+input:checked + .slider.green { background-color: #10b981; }
+input:checked + .slider.blue { background-color: #3b82f6; }
+input:checked + .slider:before { transform: translateX(26px); }
+
+/* TAGS ON CARDS */
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.tag-mini {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.tag-mini.can-pass { background: #dcfce7; color: #166534; }
+.tag-mini.room { background: #dbeafe; color: #1e40af; }
+.tag-mini.reason { background: #f1f5f9; color: #475569; }
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+  <div class="d-flex align-items-center gap-3">
+    <i class="bi bi-box-arrow-right header-icon" id="btnLogout" title="Cerrar sesión"></i>
+    <span id="userInfo" style="font-weight: 500; font-size: 14px; color: white;"></span>
+  </div>
+  <span class="titulo">Logística - Gestión de Turnos</span>
+  <div style="width: 40px;"></div>
+</div>
+
+<div class="filtro">
+  <div class="stat-item">
+    <span class="stat-label">PENDIENTES</span>
+    <span class="stat-value" id="countPendientes">0</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-label">GESTIONADOS</span>
+    <span class="stat-value" id="countGestionados">0</span>
+  </div>
+</div>
+
+<div class="container-main">
+  <div class="columna pendiente">
+    <div class="columna-header">
+      <span>Pendientes</span>
+      <i class="bi bi-hourglass-split text-warning"></i>
+    </div>
+    <div class="scroll-area" id="pendientes"></div>
+  </div>
+
+  <div class="columna gestionado">
+    <div class="columna-header">
+      <span>Gestionados</span>
+      <i class="bi bi-check-circle text-success"></i>
+    </div>
+    <div class="scroll-area" id="gestionados"></div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE -->
+<div class="modal fade" id="detalleModal">
+<div class="modal-dialog modal-xl">
+<div class="modal-content">
+
+<div class="modal-header">
+<h5 class="fw-bold">Detalle del Turno</h5>
+<button class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+<div class="row">
+
+<div class="col-md-2">
+<label class="form-label">Turno</label>
+<div class="text-white text-center p-3 fs-4 rounded-3 fw-bold" id="dTurno"></div>
+</div>
+
+<div class="col-md-5">
+<label class="form-label">Nombre</label>
+<input type="text" id="dNombre" class="form-control" disabled>
+</div>
+
+<div class="col-md-5">
+<label class="form-label">Celular</label>
+<input type="text" id="dCelular" class="form-control" disabled>
+</div>
+
+<div class="col-md-4 mt-3">
+<label class="form-label">Cédula</label>
+<input type="text" id="dCedula" class="form-control" disabled>
+</div>
+
+<div class="col-md-4 mt-3">
+<label class="form-label">Placa</label>
+<input type="text" id="dPlaca" class="form-control" disabled>
+</div>
+
+<div class="col-md-4 mt-3">
+<label class="form-label">Hora</label>
+<input type="text" id="dHora" class="form-control" disabled>
+</div>
+
+<div class="col-md-4 mt-3">
+<label class="form-label">Estado</label>
+<select id="dEstado" class="form-select" disabled>
+<option value="Pendiente">Pendiente</option>
+<option value="Atendido">Atendido</option>
+<option value="Cancelado">Cancelado</option>
+</select>
+</div>
+
+<div class="col-md-8 mt-3">
+<label class="form-label">Destino</label>
+<input type="text" id="dDestino" class="form-control" disabled>
+</div>
+
+<div class="col-md-4 mt-4">
+  <label class="form-label">¿Puede pasar?</label>
+  <div class="switch-container">
+    <span id="labelPuedePasar" style="font-size: 13px; color: #64748b;">No puede pasar</span>
+    <label class="switch">
+      <input type="checkbox" id="dPuedePasar">
+      <span class="slider green"></span>
+    </label>
+  </div>
+</div>
+
+<div class="col-md-4 mt-4">
+  <label class="form-label">Motivo</label>
+  <select id="dMotivo" class="form-select">
+    <option value="">Ninguno</option>
+    <option value="Falta Producto">Falta Producto</option>
+    <option value="Realizando HV">Realizando HV</option>
+    <option value="Sin Pedido">Sin Pedido</option>
+    <option value="Documentos Vencidos">Documentos Vencidos</option>
+    <option value="Sin Programación">Sin Programación</option>
+    <option value="Daño Báscula">Daño Báscula</option>
+  </select>
+</div>
+
+<div class="col-md-4 mt-4">
+  <label class="form-label">Sala de Conductores</label>
+  <div class="switch-container">
+    <span id="labelSala" style="font-size: 13px; color: #64748b;">No pasar a sala</span>
+    <label class="switch">
+      <input type="checkbox" id="dSalaConductores">
+      <span class="slider blue"></span>
+    </label>
+  </div>
+</div>
+
+<div class="col-md-12 mt-4">
+<label class="form-label">Observaciones</label>
+<textarea id="dObs" class="form-control" placeholder="Ingrese las observaciones" style="height: 100px; background-color: white;"></textarea>
+</div>
+
+</div>
+</div>
+
+<div class="modal-footer border-0 p-4 pt-0">
+  <button class="btn btn-success rounded-3 px-4 py-2 fw-bold" onclick="guardarCambios()" id="btnActualizar">Actualizar</button>
+  <button class="btn btn-secondary rounded-3 px-4 py-2 fw-bold" data-bs-dismiss="modal">Cancelar</button>
+</div>
+
+</div>
+</div>
+</div>
+
+<script src="assets/js/api.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+let turnos = [];
+let turnoActual = null;
+
+const getTodayDate = () => {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
+};
+
+async function loadTurnos() {
+  const result = await api.get('/api/turnos');
+  if (result.ok) {
+    const today = getTodayDate();
+    turnos = result.data.filter(t => {
+      const fechaTurno = t.fecha.split('T')[0];
+      return fechaTurno === today;
+    });
+    render();
+  }
+}
+
+function render() {
+  const pendientesDiv = document.getElementById("pendientes");
+  const gestionadosDiv = document.getElementById("gestionados");
+  pendientesDiv.innerHTML = "";
+  gestionadosDiv.innerHTML = "";
+  let countP = 0;
+  let countG = 0;
+
+  turnos.sort((a, b) => parseInt(a.numeroTurno) - parseInt(b.numeroTurno));
+
+  turnos.forEach(t => {
+    const isFinalizado = t.estado === "Atendido" || t.estado === "Cancelado";
+    let stateClass = t.estado.toLowerCase();
+
+    let tagsHtml = "";
+    if (t.puedePasar) tagsHtml += `<span class="tag-mini can-pass">Puede Ingresar</span>`;
+    if (t.salaConductores) tagsHtml += `<span class="tag-mini room">En Sala Conductores</span>`;
+    if (t.motivo) tagsHtml += `<span class="tag-mini reason">${t.motivo}</span>`;
+
+    const card = `
+      <div class="card-turno border-${stateClass}">
+        <div class="card-top">
+          <span class="badge-turno ${stateClass}">#${t.numeroTurno}</span>
+          <button class="btn-edit" onclick="abrirDetalle(${t.idTurno})">
+            <i class="bi bi-pencil-square"></i>
+          </button>
+        </div>
+        <div class="card-content" onclick="abrirDetalle(${t.idTurno})" style="cursor:pointer">
+          <span class="driver-name" title="${t.conductor}">${t.conductor}</span>
+          <div class="card-info-item">
+            <i class="bi bi-telephone"></i> ${t.celular || 'N/A'}
+          </div>
+          <div class="card-info-item">
+            <i class="bi bi-truck"></i> ${t.placa}
+          </div>
+          <div class="card-info-item">
+            <i class="bi bi-clock"></i> ${t.horaAsignacion}
+          </div>
+          ${tagsHtml ? `<div class="card-tags">${tagsHtml}</div>` : ''}
+        </div>
+      </div>
+    `;
+
+    if (!isFinalizado) {
+      pendientesDiv.innerHTML += card;
+      countP++;
+    } else {
+      gestionadosDiv.innerHTML += card;
+      countG++;
+    }
+  });
+
+  document.getElementById("countPendientes").innerText = countP;
+  document.getElementById("countGestionados").innerText = countG;
+}
+
+function abrirDetalle(idTurno) {
+  turnoActual = turnos.find(t => t.idTurno === idTurno);
+  if(!turnoActual) return;
+
+  document.getElementById("dTurno").innerText = turnoActual.numeroTurno;
+  
+  // Cambiar color del cuadro del turno según estado
+  const dTurnoDiv = document.getElementById("dTurno");
+  dTurnoDiv.className = "text-white text-center p-3 fs-4 rounded-3 fw-bold"; // Reset
+  if (turnoActual.estado === "Atendido") dTurnoDiv.classList.add("bg-success");
+  else if (turnoActual.estado === "Cancelado") dTurnoDiv.classList.add("bg-secondary");
+  else dTurnoDiv.classList.add("bg-warning");
+
+  document.getElementById("dNombre").value = turnoActual.conductor;
+  document.getElementById("dCelular").value = turnoActual.celular || "";
+  document.getElementById("dPlaca").value = turnoActual.placa;
+  document.getElementById("dCedula").value = turnoActual.cedula || "";
+  document.getElementById("dDestino").value = turnoActual.destinoFinal || "";
+  document.getElementById("dHora").value = turnoActual.horaAsignacion;
+  document.getElementById("dEstado").value = turnoActual.estado;
+  
+  document.getElementById("dPuedePasar").checked = !!turnoActual.puedePasar;
+  document.getElementById("dMotivo").value = turnoActual.motivo || "";
+  document.getElementById("dSalaConductores").checked = !!turnoActual.salaConductores;
+  document.getElementById("dObs").value = turnoActual.observaciones || "";
+
+  document.getElementById("labelPuedePasar").innerText = turnoActual.puedePasar ? "Puede pasar" : "No puede pasar";
+  document.getElementById("labelSala").innerText = turnoActual.salaConductores ? "Pasar a sala" : "No pasar a sala";
+
+  const modal = new bootstrap.Modal(document.getElementById("detalleModal"));
+  modal.show();
+}
+
+// Actualizar etiquetas de los switches en tiempo real
+document.getElementById("dPuedePasar").addEventListener("change", function(){
+  document.getElementById("labelPuedePasar").innerText = this.checked ? "Puede pasar" : "No puede pasar";
+});
+document.getElementById("dSalaConductores").addEventListener("change", function(){
+  document.getElementById("labelSala").innerText = this.checked ? "Pasar a sala" : "No pasar a sala";
+});
+
+function formatSentenceCase(input) {
+  if (!input.value) return;
+  let val = input.value.trim();
+  if (val.length === 0) return;
+  input.value = val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
+}
+
+async function guardarCambios() {
+  const data = {
+    puedePasar: document.getElementById("dPuedePasar").checked ? 1 : 0,
+    motivo: document.getElementById("dMotivo").value,
+    salaConductores: document.getElementById("dSalaConductores").checked ? 1 : 0,
+    observaciones: document.getElementById("dObs").value,
+    destinoFinal: document.getElementById("dDestino").value,
+    estado: turnoActual.estado 
+  };
+
+  const result = await api.put('/api/turnos/' + turnoActual.idTurno, data);
+
+  if (result.ok) {
+    Swal.fire({
+      title: "Gestión Guardada",
+      text: "La información logística se ha actualizado correctamente.",
+      icon: "success",
+      timer: 1500,
+      showConfirmButton: false
+    });
+    bootstrap.Modal.getInstance(document.getElementById("detalleModal")).hide();
+    loadTurnos();
+  } else {
+    Swal.fire("Error", "No se pudo actualizar: " + result.error, "error");
+  }
+}
+
+// FUNCION LOGIN INFO
+document.addEventListener("DOMContentLoaded", () => {
+  // Aplicar formateo automático
+  ['dObs', 'dDestino'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('blur', function() { formatSentenceCase(this); });
+  });
+
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (user) {
+    let rolName = "Usuario";
+    if (user.rol == 1) rolName = "Administrador";
+    if (user.rol == 2) rolName = "Logística";
+    if (user.rol == 3) rolName = "Portería";
+    document.getElementById("userInfo").innerText = `${user.nombre} - Rol: ${rolName}`;
+  }
+  loadTurnos();
+});
+
+setInterval(loadTurnos, 15000);
+
+function logout() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  window.location.href = "index.html";
+}
+
+document.getElementById("btnLogout")?.addEventListener("click", logout);
+
+
+
+</script>
+</body>
+</html>

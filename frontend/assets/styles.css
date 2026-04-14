@@ -1,0 +1,116 @@
+/* ================================ */
+/* NUEVO TURNO - ENCABEZADO SUPERIOR          */
+/* ================================ */
+.header-bar {
+  background-color: #307c2b;
+  color: #fff;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-bar h2 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.header-icon {
+  font-size: 26px;
+  cursor: pointer;
+  color: white;
+}
+
+/* ================================ */
+/* FORMULARIO DE CAMPOS            */
+/* ================================ */
+.form-label {
+  font-weight: 600;
+  color: #333;
+}
+
+.form-control,
+.form-select {
+  border: 2px solid #777;
+  border-radius: 4px;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #307c2b;
+  box-shadow: 0 0 0 0.15rem rgba(48, 124, 43, 0.25);
+}
+
+/* ================================ */
+/* TABLA DE TURNOS                 */
+/* ================================ */
+.table-header {
+  background-color: #307c2b;
+  color: white;
+  font-weight: bold;
+}
+
+.table-header th {
+  padding: 10px;
+}
+
+.table tbody tr:nth-child(odd) {
+  background-color: #eef3e8;
+}
+
+.table tbody tr:nth-child(even) {
+  background-color: #ffffff;
+}
+
+.table tbody tr.highlight {
+  background-color: #c9d351 !important;
+}
+
+/* ================================ */
+/* SCROLL                           */
+/* ================================ */
+.table-responsive {
+  max-height: 380px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+}
+
+
+/* ===== Fondo pantalla Index SOMEX ===== */
+
+/* Ocupa toda la altura y pone la imagen de fondo */
+html, body {
+  height: 100%;
+}
+
+body.index-bg {
+  /* Si RENOMBRAS el archivo a 'fondo-somex.jpg': */
+  background-image: url("./img/fondo-somex1.jpg");
+
+  background-size: cover;          /* cubre toda la pantalla */
+  background-position: center;     /* centrado */
+  background-repeat: no-repeat;    /* no repetir */
+  background-attachment: fixed;    /* efecto sutil al hacer scroll */
+}
+
+/* Capa oscura muy suave para mejorar contraste del contenido */
+.index-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.25); /* ajusta 0.15–0.35 según necesidad */
+  pointer-events: none;          /* no bloquea clics */
+  z-index: 0;
+}
+
+/* Asegura que el contenido vaya encima del overlay */
+.index-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Opcional: que las cards sean más legibles sobre fondo */
+.card.bg-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}

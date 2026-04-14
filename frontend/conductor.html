@@ -1,0 +1,261 @@
+<!--conductor.html-->
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Conductor - SOMEX</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      rel="stylesheet"
+    />
+    <link href="./assets/styles.css" rel="stylesheet" />
+    <style>
+      /* ── Fondo completo y nítido ── */
+      html, body {
+        min-height: 100%;
+      }
+
+      body {
+        background-image: url('assets/img/fondo-somex3.jpg');
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        position: relative;
+      }
+
+      /* Overlay muy suave: solo para que el texto sea legible, sin perder nitidez */
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.18);
+        z-index: 0;
+      }
+
+      /* Navbar y contenido principal por encima del overlay */
+      nav,
+      main {
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Sombra sutil en tarjetas para separarlas del fondo */
+      .card {
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14) !important;
+      }
+
+      /* Mapa */
+      #map {
+        height: 300px;
+      }
+    </style>
+  </head>
+
+  <!-- frontend/assets/js/api.js -->
+
+  <body>
+    <nav class="navbar navbar-light bg-white shadow-sm">
+      <div class="container">
+        <!-- Botón para crear turno: inicia DESHABILITADO -->
+        <a class="navbar-brand fw-bold" href="index.html">SOMEX</a>
+        <button id="btnSolicitar" class="btn btn-success" disabled>
+          Solicitar turno
+        </button>
+
+        <!--<a class="btn btn-success" href="nuevoTurno.html">Solicitar turno</a>-->
+        <!--<button id="btnSolicitar" class="btn btn-success" href="nuevoTurno.html">Solicitar turno</button>-->
+      </div>
+    </nav>
+
+    <main class="container my-3">
+      <div class="row g-3">
+        <div class="col-12">
+          <div class="card rounded-4 shadow-sm">
+            <div class="card-body">
+              <h5 class="mb-3">Ubicación y geocerca</h5>
+              <div id="map" class="rounded-3"></div>
+              <div class="mt-2">
+                <span class="badge bg-secondary" id="geoStatus"
+                  >Verificando ubicación…</span
+                >
+                <span class="ms-2" id="distanceText"></span>
+              </div>
+              <small class="text-muted"
+                >Debes estar dentro del perímetro para solicitar turno.</small
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+          <div class="card rounded-4 shadow-sm">
+            <div class="card-body">
+              <h5 class="mb-3">Turnos del día</h5>
+              <ul id="turnList" class="list-group small"></ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+          <div class="card rounded-4 shadow-sm">
+            <div class="card-body text-center">
+              <h6 class="text-success">Su turno es el N°</h6>
+              <div id="myTurn" class="display-4 fw-bold">—</div>
+              <hr />
+              <h5 class="mb-3">El último turno ingresado</h5>
+              <div id="lastTurn" class="display-3">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Modal Confirmación -->
+    <div class="modal fade" id="okModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center p-4">
+          <h3 class="mb-2">¡Turno asignado!</h3>
+          <div class="display-3 fw-bold" id="assignedNum">—</div>
+          <button class="btn btn-primary mt-3" data-bs-dismiss="modal">
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let cargando = false;
+      let turnosPrevios = "";
+
+      async function validarTurno() {
+        const turnoGuardado = localStorage.getItem("turno");
+
+        if (!turnoGuardado) {
+          mostrarSinTurno();
+          return;
+        }
+
+        const turno = JSON.parse(turnoGuardado);
+        
+        // Mostrar número local de inmediato para evitar el guión inicial
+        if (turno.numeroTurno) {
+          mostrarTurno(turno.numeroTurno);
+        }
+
+        try {
+          const API =
+            localStorage.getItem("API_BASE") || "http://localhost:4000";
+
+          const res = await fetch(`${API}/api/turnos/turnos/${turno.id_turno}`);
+          const data = await res.json();
+
+          const estadosFinalizados = ["Atendido", "Cancelado", "Salió"];
+
+          if (estadosFinalizados.includes(data.estado)) {
+            mostrarSinTurno();
+            localStorage.removeItem("turno");
+            return;
+          }
+
+          mostrarTurno(data.numeroTurno);
+        } catch (error) {
+          console.error("Error validando turno:", error);
+        }
+      }
+
+      async function cargarTurnos() {
+        if (cargando) return;
+        cargando = true;
+
+        try {
+          const API =
+            localStorage.getItem("API_BASE") || "http://localhost:4000";
+          const idConductor = localStorage.getItem("idConductor") || 7;
+
+          const res = await fetch(`${API}/api/turnos/hoy/${idConductor}`);
+          const data = await res.json();
+
+          // El endpoint retorna { total, ultimoTurno, miTurno, turnos }
+          const turnos = data.turnos || [];
+          const ultimoTurno = data.ultimoTurno;
+
+          // Incluir el estado en el string para detectar cambios (Pendiente -> Atendido)
+          const turnosString = JSON.stringify(turnos.map(t => ({ n: t.numeroTurno, e: t.estado }))) + ultimoTurno;
+
+          // EVITA PARPADEO solo si no hay cambios reales
+          if (turnosPrevios === turnosString) {
+            return;
+          }
+
+          turnosPrevios = turnosString;
+
+          const lista = document.getElementById("turnList");
+          const lastTurn = document.getElementById("lastTurn");
+
+          lista.innerHTML = "";
+
+          // El backend ya los trae ordenados, pero aseguramos
+          turnos.sort((a, b) => a.numeroTurno - b.numeroTurno);
+
+          turnos.forEach((t) => {
+            const li = document.createElement("li");
+            li.className = "list-group-item";
+            // El backend retorna numeroTurno sin pad en este endpoint específico
+            const numLabel = String(t.numeroTurno).padStart(2, "0");
+            li.innerText = `Turno ${numLabel} - ${t.estado || "Pendiente"}`;
+            lista.appendChild(li);
+          });
+
+          lastTurn.innerText = ultimoTurno ? String(ultimoTurno).padStart(2, "0") : "—";
+
+        } catch (error) {
+          console.error("Error cargando turnos:", error);
+        } finally {
+          cargando = false;
+        }
+      }
+
+      async function actualizarVista() {
+        await validarTurno();
+        await cargarTurnos();
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        actualizarVista();
+        setInterval(actualizarVista, 5000);
+      });
+
+      function mostrarTurno(numero) {
+        const el = document.querySelector("#myTurn");
+
+        if (!numero) return;
+
+        el.innerText = numero;
+        el.style.color = "#198754";
+      }
+
+      function mostrarSinTurno() {
+        document.querySelector("#myTurn").innerText = "—";
+      }
+    </script>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Fuerza la base de la API en local
+      localStorage.setItem("API_BASE", "http://localhost:4000");
+    </script>
+    <script src="./assets/js/api.js"></script>
+    <script src="./assets/js/geo.js"></script>
+    <script src="./assets/js/ui.js"></script>
+    <!-- SMS SIMULATOR -->
+    <script src="./assets/js/sms-simulator.js"></script>
+  </body>
+</html>

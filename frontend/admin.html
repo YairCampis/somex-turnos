@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administrador | SOMEX</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="assets/js/api.js"></script>
+<script src="assets/js/guard.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+body{
+background:#f4f6fb;
+font-family: 'Segoe UI',sans-serif;
+}
+
+/* SIDEBAR */
+.sidebar{
+width:240px;
+height:100vh;
+position:fixed;
+background:#111827;
+color:white;
+padding:25px;
+}
+
+.sidebar h4{
+margin-bottom:40px;
+}
+
+.sidebar a{
+display:block;
+padding:12px;
+border-radius:8px;
+color:#cbd5e1;
+text-decoration:none;
+margin-bottom:8px;
+}
+
+.sidebar a:hover{
+background:#1f2937;
+color:white;
+}
+
+/* MAIN */
+.main{
+margin-left:240px;
+padding:30px;
+}
+
+/* CARDS */
+.dashboard-card{
+background:white;
+border-radius:14px;
+padding:25px;
+box-shadow:0 10px 25px rgba(0,0,0,0.08);
+cursor:pointer;
+}
+
+.dashboard-card:hover{
+transform:translateY(-4px);
+}
+
+.icon-box{
+font-size:30px;
+width:60px;
+height:60px;
+display:flex;
+align-items:center;
+justify-content:center;
+border-radius:12px;
+margin-bottom:15px;
+}
+
+.icon-users{background:#dbeafe;color:#2563eb}
+.icon-roles{background:#dcfce7;color:#16a34a}
+.icon-report{background:#fef9c3;color:#ca8a04}
+.icon-msg{background:#f3e8ff;color:#7c3aed}
+
+.metric{
+background:white;
+padding:20px;
+border-radius:12px;
+}
+
+/* BOTON CAMBIO CONTRASEÑA */
+.btn-secure {
+  background-color: #6366f1 !important;
+  color: white !important;
+  border: none !important;
+}
+.btn-secure:hover {
+  background-color: #4f46e5 !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+</style>
+
+</head>
+
+<body data-role="1">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="mb-4">
+    <h4 class="mb-1">SOMEX</h4>
+    <small id="userInfo" style="color: white; font-weight: 500;"></small>
+  </div>
+  <a href="dashboardTurnoAdmin.html">Dashboard</a>
+  <a href="#">Usuarios</a>
+  <a href="roles.html">Roles</a>
+  <a href="reportes.html">Reportes</a>
+  <a href="#">Notificaciones</a>
+  <hr>
+  <a href="#" onclick="logout()">
+     <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+  </a>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<h3 class="mb-4">Panel Administrador</h3>
+
+<!-- METRICAS -->
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="metric">
+      <h3 id="statUsuarios">0</h3>
+      <span>Usuarios registrados</span>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="metric">
+      <h3 id="statRoles">0</h3>
+      <span>Roles activos</span>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="metric">
+      <h3 id="statTurnos">0</h3>
+      <span>Turnos hoy</span>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="metric">
+      <h3 id="statNotificaciones">0</h3>
+      <span>Notificaciones</span>
+    </div>
+  </div>
+</div>
+
+<!-- MODULOS -->
+<div class="row g-4">
+
+<div class="col-md-3">
+<div class="dashboard-card" data-bs-toggle="modal" data-bs-target="#usuariosModal">
+<div class="icon-box icon-users">👥</div>
+<h5>Usuarios</h5>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="dashboard-card" data-bs-toggle="modal" data-bs-target="#rolesModal" style="cursor:pointer;">
+<div class="icon-box icon-roles">🔑</div>
+<h5>Roles</h5>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="dashboard-card" onclick="window.location.href='reportes.html'">
+<div class="icon-box icon-report">📊</div>
+<h5>Reportes</h5>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="dashboard-card">
+<div class="icon-box icon-msg">💬</div>
+<h5>Mensajes</h5>
+</div>
+</div>
+
+</div>
+
+</div>
+
+<!-- ================= MODAL USUARIOS ================= -->
+<div class="modal fade" id="usuariosModal">
+<div class="modal-dialog modal-lg">
+<div class="modal-content">
+
+<div class="modal-header">
+<h5>Gestión de Usuarios</h5>
+<button class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+
+<button class="btn btn-primary mb-3"
+data-bs-toggle="modal"
+data-bs-target="#crearUsuarioModal">
+Nuevo Usuario
+</button>
+
+<table class="table">
+<thead>
+<tr>
+<th>ID</th>
+<th>Nombre</th>
+<th>Email</th>
+<th>Rol</th>
+<th>Acciones</th>
+</tr>
+</thead>
+<tbody id="tablaUsuarios"></tbody>
+</table>
+
+</div>
+</div>
+</div>
+</div>
+
+    <!-- ================= MODAL CREAR ================= -->
+    <div class="modal fade" id="crearUsuarioModal">
+    <div class="modal-dialog">
+    <div class="modal-content">
+
+    <div class="modal-header">
+    <h5>Crear Usuario</h5>
+    <button class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+
+    <div class="modal-body">
+    <form id="formCrearUsuario">
+
+    <input type="text" id="nombre" class="form-control mb-3" placeholder="Nombre" required>
+    <input type="email" id="correo" class="form-control mb-3" placeholder="Correo" required>
+    <input type="password" id="contrasena" class="form-control mb-3" placeholder="Contraseña" required>
+
+    <select id="rol" class="form-control mb-3" required>
+    <option value="">Seleccionar Rol</option>
+    <option value="1">Administrador</option>
+    <option value="2">Logística</option>
+    <option value="3">Portería</option>
+    </select>
+
+    <button class="btn btn-success w-100">Guardar</button>
+
+</form>
+</div>
+
+</div>
+</div>
+</div>
+
+<!-- ================= MODAL EDITAR ================= -->
+<div class="modal fade" id="editarUsuarioModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5>Editar Usuario</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="formEditarUsuario">
+
+          <input type="hidden" id="editId">
+
+          <input type="text" id="editNombre" class="form-control mb-3" disabled>
+          <input type="email" id="editCorreo" class="form-control mb-3" disabled>
+          <input type="password" id="editContrasena" class="form-control mb-3" disabled>
+
+          <!--<input type="password" id="editContrasena" class="form-control mb-3" placeholder="Nueva contraseña"> -->
+
+          <select id="editRol" class="form-control mb-3" required>
+            <option value="1">Administrador</option>
+            <option value="2">Logística</option>
+            <option value="3">Portería</option>
+          </select>
+
+          <button class="btn btn-success w-100">Actualizar</button>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ================= MODAL ROLES ================= -->
+<div class="modal fade" id="rolesModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5>Gestión de Roles</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <button class="btn btn-primary mb-3"
+        data-bs-toggle="modal"
+        data-bs-target="#crearRolModal">
+        Nuevo Rol
+        </button>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaRoles"></tbody>
+        </table>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= CREAR ROL ================= -->
+<div class="modal fade" id="crearRolModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5>Crear Rol</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="formCrearRol">
+
+          <input type="text" id="nombreRol" class="form-control mb-3" placeholder="Nombre del rol" required>
+
+          <button class="btn btn-success w-100">Guardar</button>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<script>
+// Arreglo global para permitir escribir en SweetAlert2 sobre Modales de Bootstrap 5
+document.addEventListener('focusin', (e) => {
+  if (e.target.closest(".swal2-container")) {
+    e.stopImmediatePropagation();
+  }
+});
+
+const API = "http://localhost:4000/api";
+
+function irRoles(){
+  window.location.href = "roles.html";
+}
+
+
+// ================= OBTENER USUARIOS =================
+async function getAllEmpleados(){
+
+const resp = await fetch(API+"/empleados",{
+headers:{Authorization:"Bearer "+localStorage.getItem("token")}
+});
+
+const data = await resp.json();
+
+const tabla = document.getElementById("tablaUsuarios");
+tabla.innerHTML="";
+
+data.forEach(emp=>{
+
+let rol="Usuario";
+if(emp.idRol==1) rol="Administrador";
+if(emp.idRol==2) rol="Logística";
+if(emp.idRol==3) rol="Portería";
+
+tabla.innerHTML+=`
+<tr>
+<td>${emp.idEmpleado}</td>
+<td>${emp.nombreCompleto}</td>
+<td>${emp.correo}</td>
+<td>${rol}</td>
+<td>
+<div class="btn-group">
+  <button class="btn btn-sm btn-warning"
+  onclick="editarRol(${emp.idEmpleado}, ${emp.idRol})">
+  Editar
+  </button>
+  <button class="btn btn-sm btn-secure"
+  onclick="cambiarPassword(${emp.idEmpleado})">
+  Contraseña
+  </button>
+  <button class="btn btn-danger btn-sm"
+  onclick="eliminarEmpleado(${emp.idEmpleado})">
+  Eliminar
+  </button>
+</div>
+</td>
+</tr>
+`;
+
+});
+
+}
+
+// ================= ELIMINAR USUARIO=================
+async function eliminarEmpleado(id){
+
+const ok = await Swal.fire({
+title:"¿Eliminar Usuario?",
+text: "Esta acción no se puede deshacer",
+icon:"warning",
+showCancelButton:true,
+confirmButtonText: "Sí, eliminar"
+});
+
+if(!ok.isConfirmed) return;
+
+try {
+await fetch(API+"/empleados/"+id,{
+method:"DELETE",
+headers:{Authorization:"Bearer "+localStorage.getItem("token")}
+});
+
+Swal.fire("Eliminado","","Usuario eliminado correctamente","success");
+getAllEmpleados();
+
+}catch (error) {
+        console.error(error);
+}}
+
+
+// ================= CREAR USUARIO =================
+document.addEventListener("DOMContentLoaded",()=>{
+
+document.getElementById("formCrearUsuario")
+.addEventListener("submit",async(e)=>{
+
+e.preventDefault();
+
+const nombre=document.getElementById("nombre").value;
+const correo=document.getElementById("correo").value;
+const contrasena=document.getElementById("contrasena").value;
+const idRol=document.getElementById("rol").value;
+
+const resp=await fetch(API+"/empleados",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+Authorization:"Bearer "+localStorage.getItem("token")
+},
+body:JSON.stringify({
+nombreCompleto:nombre,
+correo,
+contrasena,
+idRol
+})
+});
+
+if(!resp.ok){
+Swal.fire("Error","No se pudo crear","error");
+return;
+}
+
+Swal.fire("Creado correctamente","","success");
+
+const modal=bootstrap.Modal.getOrCreateInstance(
+document.getElementById("crearUsuarioModal")
+);
+modal.hide();
+
+document.getElementById("formCrearUsuario").reset();
+
+getAllEmpleados();
+
+});
+
+});
+
+
+// ================= ABRIR MODAL =================
+document.getElementById("usuariosModal")
+.addEventListener("show.bs.modal",getAllEmpleados);
+
+// ================= LOGOUT =================
+function logout(){
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  window.location.href="index.html";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (user) {
+    let rolName = "Usuario";
+    if (user.rol == 1) rolName = "Administrador";
+    if (user.rol == 2) rolName = "Logística";
+    if (user.rol == 3) rolName = "Portería";
+    document.getElementById("userInfo").innerText = `${user.nombre} - Rol: ${rolName}`;
+  }
+});
+
+// ================= FUNCION PARA ABRIR EL MODAL EDITAR USUARIOS=================
+function abrirModalEditar(emp){
+
+document.getElementById("editId").value = emp.idEmpleado;
+document.getElementById("editNombre").value = emp.nombreCompleto;
+document.getElementById("editCorreo").value = emp.correo;
+document.getElementById("editRol").value = emp.idRol;
+
+document.getElementById("editContrasena").value = "";
+
+const modal = new bootstrap.Modal(
+document.getElementById("editarUsuarioModal")
+);
+
+modal.show();
+
+}
+
+// ================= FUNCION PARA ACTUALIZAR USUARIO =================
+
+document.getElementById("formEditarUsuario")
+.addEventListener("submit", async (e)=>{
+
+e.preventDefault();
+
+const id = document.getElementById("editId").value;
+const contrasena = document.getElementById("editContrasena").value;
+const idRol = document.getElementById("editRol").value;
+
+const body = { idRol };
+
+// Solo enviar contraseña si el usuario escribió algo
+if(contrasena){
+    body.contrasena = contrasena;
+}
+
+const resp = await fetch(API + "/empleados/" + id,{
+method:"PUT",
+headers:{
+"Content-Type":"application/json",
+Authorization:"Bearer "+localStorage.getItem("token")
+},
+body: JSON.stringify(body)
+});
+
+if(!resp.ok){
+Swal.fire("Error","No se pudo actualizar","error");
+return;
+}
+
+Swal.fire("Actualizado correctamente","","success");
+
+const modal = bootstrap.Modal.getOrCreateInstance(
+document.getElementById("editarUsuarioModal")
+);
+modal.hide();
+
+getAllEmpleados();
+
+});
+
+//================= FUNCION PARA EDITAR ROL DE USUARIO =================
+async function editarRol(id, rolActual){
+
+const { value: nuevoRol } = await Swal.fire({
+title: "Editar Rol",
+input: "select",
+inputOptions: {
+1: "Administrador",
+2: "Logística",
+3: "Portería"
+},
+inputValue: rolActual,
+showCancelButton: true,
+confirmButtonText: "Actualizar"
+});
+
+if(!nuevoRol) return;
+
+try{
+
+const resp = await fetch(API + "/empleados/" + id, {
+method: "PUT",
+headers: {
+"Content-Type": "application/json",
+Authorization: "Bearer " + localStorage.getItem("token")
+},
+body: JSON.stringify({
+idRol: nuevoRol
+})
+});
+
+if(!resp.ok){
+Swal.fire("Error","No se pudo actualizar","error");
+return;
+}
+
+Swal.fire("Actualizado correctamente","","success");
+
+getAllEmpleados();
+
+}catch(error){
+console.error(error);
+Swal.fire("Error","Fallo en la petición","error");
+}
+}
+
+// ================= CAMBIAR CONTRASEÑA =================
+async function cambiarPassword(id) {
+  const { value: nuevaClave } = await Swal.fire({
+    title: 'Actualizar Contraseña',
+    input: 'password',
+    inputLabel: 'Ingrese la nueva contraseña para el usuario',
+    inputPlaceholder: 'Mínimo 6 caracteres',
+    showCancelButton: true,
+    confirmButtonText: 'Guardar Nueva Clave',
+    confirmButtonColor: '#198754',
+    // Evita conflictos de foco con el modal de Bootstrap
+    didOpen: () => {
+      const input = Swal.getInput();
+      if (input) {
+        input.focus();
+      }
+    },
+    inputAttributes: {
+      autocapitalize: 'off',
+      autocorrect: 'off'
+    }
+  });
+
+  if (!nuevaClave) return;
+
+  if (nuevaClave.length < 4) {
+    Swal.fire("Error", "La contraseña es muy corta", "error");
+    return;
+  }
+
+  try {
+    const resp = await fetch(API + "/empleados/" + id, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token")
+      },
+      body: JSON.stringify({ contrasena: nuevaClave })
+    });
+
+    if (resp.ok) {
+      Swal.fire("Éxito", "Contraseña actualizada y encriptada correctamente", "success");
+    } else {
+      Swal.fire("Error", "No se pudo actualizar la contraseña", "error");
+    }
+  } catch (error) {
+    console.error(error);
+    Swal.fire("Error", "Error de conexión", "error");
+  }
+}
+
+
+// ================= OBTENER ROLES =================
+async function getAllRoles(){
+
+const resp = await fetch(API+"/roles",{
+headers:{Authorization:"Bearer "+localStorage.getItem("token")}
+});
+
+const data = await resp.json();
+
+const tabla = document.getElementById("tablaRoles");
+tabla.innerHTML="";
+
+data.forEach(rol=>{
+
+tabla.innerHTML+=`
+<tr>
+<td>${rol.idRol}</td>
+<td>${rol.nombreRol}</td>
+<td>
+<button class="btn btn-sm btn-warning"
+onclick="editarRolNombre(${rol.idRol}, '${rol.nombreRol}')">
+Editar
+</button>
+
+<button class="btn btn-danger btn-sm"
+onclick="eliminarRol(${rol.idRol})">
+Eliminar
+</button>
+</td>
+</tr>
+`;
+
+});
+
+}
+
+// ================= CREAR ROL =================
+document.getElementById("formCrearRol")
+.addEventListener("submit", async (e)=>{
+
+e.preventDefault();
+
+const nombreRol = document.getElementById("nombreRol").value;
+
+const resp = await fetch(API+"/roles",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+Authorization:"Bearer "+localStorage.getItem("token")
+},
+body:JSON.stringify({nombreRol})
+});
+
+if(!resp.ok){
+Swal.fire("Error","No se pudo crear","error");
+return;
+}
+
+Swal.fire("Rol creado","","success");
+
+bootstrap.Modal.getInstance(document.getElementById("crearRolModal")).hide();
+document.getElementById("formCrearRol").reset();
+
+getAllRoles();
+
+});
+
+// ================= ELIMINAR ROL =================
+async function eliminarRol(id){
+
+const ok = await Swal.fire({
+title:"¿Eliminar Rol?",
+icon:"warning",
+showCancelButton:true
+});
+
+if(!ok.isConfirmed) return;
+
+await fetch(API+"/roles/"+id,{
+method:"DELETE",
+headers:{Authorization:"Bearer "+localStorage.getItem("token")}
+});
+
+Swal.fire("Eliminado","","success");
+
+getAllRoles();
+
+}
+
+// ================= EDITAR NOMBRE =================
+async function editarRolNombre(id, nombreActual){
+
+const { value: nuevoNombre } = await Swal.fire({
+title: "Editar Rol",
+input: "text",
+inputValue: nombreActual,
+showCancelButton: true
+});
+
+if(!nuevoNombre) return;
+
+const resp = await fetch(API+"/roles/"+id,{
+method:"PUT",
+headers:{
+"Content-Type":"application/json",
+Authorization:"Bearer "+localStorage.getItem("token")
+},
+body:JSON.stringify({nombreRol:nuevoNombre})
+});
+
+if(!resp.ok){
+Swal.fire("Error","No se pudo actualizar","error");
+return;
+}
+
+Swal.fire("Actualizado","","success");
+
+getAllRoles();
+
+}
+
+// ================= ABRIR MODAL =================
+document.getElementById("rolesModal")
+.addEventListener("show.bs.modal", getAllRoles);
+
+// ================= ESTADISTICAS DASHBOARD =================
+async function loadDashboardStats() {
+  try {
+    const result = await api.get("/api/stats/summary");
+    if (result.ok) {
+      document.getElementById("statUsuarios").innerText = result.data.usuarios;
+      document.getElementById("statRoles").innerText = result.data.roles;
+      document.getElementById("statTurnos").innerText = result.data.turnos;
+      const statNotif = document.getElementById("statNotificaciones");
+      if (statNotif) statNotif.innerText = result.data.notificaciones;
+    }
+  } catch (error) {
+    console.error("Error al cargar estadísticas:", error);
+  }
+}
+
+function logout() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  window.location.href = "index.html";
+}
+
+// Cargar métricas al inicio y cada 30 segundos
+loadDashboardStats();
+setInterval(loadDashboardStats, 30000);
+
+
+</script>
+
+</body>
+</html>

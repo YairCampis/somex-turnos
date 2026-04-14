@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reportes y Analítica | SOMEX</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/guard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    body { background: #f4f6fb; font-family: 'Segoe UI', sans-serif; }
+    .sidebar { width: 240px; height: 100vh; position: fixed; background: #111827; color: white; padding: 25px; z-index: 100; }
+    .sidebar h4 { margin-bottom: 40px; }
+    .sidebar a { display: block; padding: 12px; border-radius: 8px; color: #cbd5e1; text-decoration: none; margin-bottom: 8px; }
+    .sidebar a:hover, .sidebar a.active { background: #1f2937; color: white; }
+    .main { margin-left: 240px; padding: 30px; }
+    .card { border: none; border-radius: 14px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+    .table-container { background: white; padding: 20px; border-radius: 14px; margin-top: 20px; }
+    .btn-excel { background-color: #1d6f42; color: white; }
+    .btn-pdf { background-color: #e53935; color: white; }
+    .nav-tabs { border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; }
+    .nav-link { border: none; font-weight: 600; color: #64748b; padding: 12px 20px; }
+    .nav-link.active { border-bottom: 3px solid #3b82f6; color: #1e293b; background: transparent !important; }
+    .stat-card { padding: 20px; text-align: center; }
+    .stat-card h2 { font-weight: 800; color: #1e293b; }
+    .stat-card span { font-size: 14px; color: #64748b; }
+    .chart-container { position: relative; height: 300px; width: 100%; margin-top: 20px; }
+  </style>
+</head>
+
+<body data-role="1">
+
+  <div class="sidebar">
+    <div class="mb-4">
+      <h4 class="mb-1">SOMEX</h4>
+      <small id="userInfo" style="color: white; font-weight: 500;"></small>
+    </div>
+    <a href="admin.html">Panel General</a>
+    <a href="dashboardTurnoAdmin.html">Dashboard</a>
+    <a href="#">Usuarios</a>
+    <a href="roles.html">Roles</a>
+    <a href="reportes.html" class="active">Reportes</a>
+    <hr>
+    <a href="#" onclick="logout()">
+      <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+    </a>
+  </div>
+
+  <div class="main">
+    <h3 class="mb-4">Inteligencia de Datos y Reportes</h3>
+
+    <ul class="nav nav-tabs" id="reportTabs" role="tablist">
+      <li class="nav-item">
+        <button class="nav-link active" id="listado-tab" data-bs-toggle="tab" data-bs-target="#listado" type="button">Listado Detallado</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" id="analitica-tab" data-bs-toggle="tab" data-bs-target="#analitica" type="button" onclick="loadAnalytics()">Demanda y Volumen</button>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <!-- TAB LISTADO -->
+      <div class="tab-pane fade show active" id="listado">
+        <div class="card p-4">
+          <form id="formFiltros" class="row g-3 align-items-end">
+            <div class="col-md-4">
+              <label class="form-label">Fecha Inicio</label>
+              <input type="date" id="fechaInicio" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Fecha Fin</label>
+              <input type="date" id="fechaFin" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Consultar</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="table-container">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Historial de Turnos</h5>
+            <div class="btn-group">
+              <button class="btn btn-excel" onclick="exportToExcel()"><i class="bi bi-file-earmark-excel"></i> Excel</button>
+              <button class="btn btn-pdf" onclick="exportToPDF()"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover" id="tablaReporte">
+              <thead class="table-light">
+                <tr><th>#</th><th>Fecha</th><th>Hora</th><th>Conductor</th><th>Placa</th><th>Destino</th><th>Estado</th><th>Pasar</th></tr>
+              </thead>
+              <tbody id="tbodyReporte">
+                <tr><td colspan="8" class="text-center text-muted">Use los filtros para buscar información</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB ANALITICA -->
+      <div class="tab-pane fade" id="analitica">
+        
+        <!-- RESUMEN COMPARATIVO -->
+        <div class="row g-4 mb-4">
+          <div class="col-md-3">
+            <div class="card stat-card">
+              <span id="labelMesActual">Este Mes</span>
+              <h2 id="valMesActual">0</h2>
+              <small id="deltaMes" class="fw-bold"></small>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card stat-card">
+              <span>Cerrados (Atendidos)</span>
+              <h2 id="valAtendidos">0</h2>
+              <small class="text-success">Éxito operativo</small>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card stat-card">
+              <span>Cancelados</span>
+              <h2 id="valCancelados">0</h2>
+              <small class="text-danger">Pérdida de demanda</small>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card stat-card">
+              <span>Tasa de Atención</span>
+              <h2 id="valTasa">0%</h2>
+              <div class="progress mt-2" style="height: 5px;">
+                <div id="progTasa" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <!-- EVOLUCION -->
+          <div class="col-md-8">
+            <div class="card p-4">
+              <h6>Evolución de Turnos (Mensual)</h6>
+              <div class="chart-container">
+                <canvas id="chartEvolucion"></canvas>
+              </div>
+            </div>
+          </div>
+          <!-- ESTADOS -->
+          <div class="col-md-4">
+            <div class="card p-4">
+              <h6>Distribución por Estado</h6>
+              <div class="chart-container">
+                <canvas id="chartEstados"></canvas>
+              </div>
+            </div>
+          </div>
+          <!-- HORAS PICO -->
+          <div class="col-md-6">
+            <div class="card p-4">
+              <h6>Demanda por Hora (24h)</h6>
+              <div class="chart-container">
+                <canvas id="chartHoras"></canvas>
+              </div>
+            </div>
+          </div>
+          <!-- DIAS SEMANA -->
+          <div class="col-md-6">
+            <div class="card p-4">
+              <h6>Demanda por Día de la Semana</h6>
+              <div class="chart-container">
+                <canvas id="chartDias"></canvas>
+              </div>
+            </div>
+          </div>
+          <!-- TOP 10 DIAS -->
+          <div class="col-md-12">
+            <div class="card p-4">
+              <h6>Top 10 Días con Mayor Demanda</h6>
+              <div class="table-responsive mt-3">
+                <table class="table table-sm">
+                  <thead><tr><th>Fecha</th><th>Total Turnos</th><th>Porcentaje del Mes</th></tr></thead>
+                  <tbody id="tbodyTop10"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const API = "http://localhost:4000/api";
+    let dataReporte = [];
+    let charts = {};
+
+    // --- LISTADO ---
+    document.getElementById("formFiltros").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fInicio = document.getElementById("fechaInicio").value;
+      const fFin = document.getElementById("fechaFin").value;
+      try {
+        const url = new URL(API + "/turnos/report");
+        if (fInicio) url.searchParams.append("fechaInicio", fInicio);
+        if (fFin) url.searchParams.append("fechaFin", fFin);
+        const resp = await fetch(url, { headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+        dataReporte = await resp.json();
+        renderTable();
+      } catch (error) { Swal.fire("Error", "No se pudo obtener el reporte", "error"); }
+    });
+
+    function renderTable() {
+      const tbody = document.getElementById("tbodyReporte");
+      tbody.innerHTML = dataReporte.length ? "" : '<tr><td colspan="8" class="text-center">No se encontraron resultados</td></tr>';
+      dataReporte.forEach(t => {
+        tbody.innerHTML += `<tr><td>${t.numeroTurno}</td><td>${t.fecha.split('T')[0]}</td><td>${t.horaAsignacion}</td><td>${t.conductor}</td><td>${t.placa}</td><td>${t.destinoFinal || '-'}</td><td><span class="badge ${getStatusBadge(t.estado)}">${t.estado}</span></td><td>${t.puedePasar ? 'SI' : 'NO'}</td></tr>`;
+      });
+    }
+
+    function getStatusBadge(e) { return e==='Pendiente'?'bg-warning text-dark':(e==='Atendido'?'bg-success':'bg-secondary'); }
+
+    // --- ANALITICA ---
+    async function loadAnalytics() {
+      console.log("Cargando analítica...");
+      try {
+        // Usamos el helper api.get que ya maneja token y url base
+        const result = await api.get("/api/turnos/analytics");
+        
+        if (!result.ok) {
+           throw new Error(result.error || "Error al obtener analítica");
+        }
+
+        console.log("Datos recibidos:", result.data);
+        renderAnalytics(result.data);
+      } catch (err) { 
+        console.error("Error en analítica:", err);
+        Swal.fire("Error", "No se pudieron cargar los datos estadísticos: " + err.message, "error"); 
+      }
+    }
+
+    function renderAnalytics(data) {
+      if (!data) return;
+
+      // Protecciones para datos vacíos
+      const porHora = data.porHora || [];
+      const porDiaSemana = data.porDiaSemana || [];
+      const porEstado = data.porEstado || [];
+      const evolucionMes = data.evolucionMes || [];
+      const topFechas = data.topFechas || [];
+
+      // 1. Horas Pico
+      const hoursLabels = Array.from({length: 24}, (_, i) => `${i}:00`);
+      const hoursData = Array(24).fill(0);
+      porHora.forEach(d => { if(d.hora !== undefined) hoursData[d.hora] = d.total; });
+      createChart('chartHoras', 'bar', hoursLabels, hoursData, 'Turnos por Hora', '#3b82f6');
+
+      // 2. Días Semana
+      const diasLabels = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+      const diasData = Array(7).fill(0);
+      porDiaSemana.forEach(d => { if(d.numDia) diasData[d.numDia - 1] = d.total; });
+      createChart('chartDias', 'line', diasLabels, diasData, 'Demanda Semanal', '#10b981');
+
+      // 3. Estados
+      const estadoLabels = porEstado.map(e => e.estado);
+      const estadoData = porEstado.map(e => e.total);
+      createChart('chartEstados', 'doughnut', estadoLabels, estadoData, 'Estado', ['#f59e0b', '#10b981', '#64748b']);
+
+      // 4. Evolución
+      const evolucionLabels = evolucionMes.map(e => e.mes).reverse();
+      const evolucionData = evolucionMes.map(e => e.total).reverse();
+      createChart('chartEvolucion', 'line', evolucionLabels, evolucionData, 'Turnos por Mes', '#6366f1', true);
+
+      // 5. Métricas de Resumen
+      const atendidos = porEstado.find(e => e.estado === 'Atendido')?.total || 0;
+      const cancelados = porEstado.find(e => e.estado === 'Cancelado')?.total || 0;
+      const total = porEstado.reduce((acc, curr) => acc + curr.total, 0);
+      
+      document.getElementById("valAtendidos").innerText = atendidos;
+      document.getElementById("valCancelados").innerText = cancelados;
+      const tasa = total > 0 ? Math.round((atendidos / total) * 100) : 0;
+      document.getElementById("valTasa").innerText = tasa + "%";
+      document.getElementById("progTasa").style.width = tasa + "%";
+
+      // Comparativo Mes
+      const mesActualTotal = evolucionMes[0]?.total || 0;
+      const mesAnteriorTotal = evolucionMes[1]?.total || 0;
+      document.getElementById("valMesActual").innerText = mesActualTotal;
+      const delta = mesAnteriorTotal > 0 ? Math.round(((mesActualTotal - mesAnteriorTotal) / mesAnteriorTotal) * 100) : 0;
+      const deltaEl = document.getElementById("deltaMes");
+      deltaEl.innerText = (delta >= 0 ? "+" : "") + delta + "% vs mes anterior";
+      deltaEl.className = delta >= 0 ? "text-success" : "text-danger";
+
+      // 6. Top 10
+      const tbodyTop = document.getElementById("tbodyTop10");
+      tbodyTop.innerHTML = "";
+      topFechas.forEach(f => {
+        const pct = total > 0 ? Math.round((f.total / total) * 100) : 0;
+        tbodyTop.innerHTML += `<tr><td>${f.fecha.split('T')[0]}</td><td><strong>${f.total}</strong></td><td><div class="d-flex align-items-center gap-2">${pct}% <div class="progress flex-grow-1" style="height:4px"><div class="progress-bar" style="width:${pct}%"></div></div></div></td></tr>`;
+      });
+    }
+
+    function createChart(id, type, labels, data, label, colors, fill = false) {
+      if (charts[id]) charts[id].destroy();
+      const ctx = document.getElementById(id).getContext('2d');
+      charts[id] = new Chart(ctx, {
+        type: type,
+        data: {
+          labels: labels,
+          datasets: [{
+            label: label,
+            data: data,
+            backgroundColor: colors,
+            borderColor: Array.isArray(colors) ? '#fff' : colors,
+            borderWidth: 2,
+            tension: 0.4,
+            fill: fill
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: type === 'doughnut' } }
+        }
+      });
+    }
+
+    // --- EXPORTAR ---
+    function exportToExcel() {
+       if (!dataReporte.length) return Swal.fire("Info", "Sin datos", "info");
+       const ws = XLSX.utils.json_to_sheet(dataReporte);
+       const wb = XLSX.utils.book_new();
+       XLSX.utils.book_append_sheet(wb, ws, "Reporte");
+       XLSX.writeFile(wb, "Reporte_Somex.xlsx");
+    }
+
+    function exportToPDF() {
+      if (!dataReporte.length) return Swal.fire("Info", "Sin datos", "info");
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('l', 'mm', 'a4');
+      doc.text("Reporte de Turnos - SOMEX", 14, 15);
+      doc.autoTable({ startY: 25, head: [['#', 'Fecha', 'Conductor', 'Placa', 'Estado']], body: dataReporte.map(t => [t.numeroTurno, t.fecha.split('T')[0], t.conductor, t.placa, t.estado]) });
+      doc.save("Reporte_Somex.pdf");
+    }
+
+    function logout() { localStorage.removeItem("token"); localStorage.removeItem("user"); window.location.href = "index.html"; }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (user) {
+        let r = user.rol == 1 ? "Administrador" : (user.rol == 2 ? "Logística" : "Portería");
+        document.getElementById("userInfo").innerText = `${user.nombre} - ${r}`;
+      }
+    });
+  </script>
+</body>
+</html>
