@@ -2,6 +2,9 @@
 const pool = require("../config/dbConfig");
 const { toSentenceCase } = require("../utils/textUtils");
 const smsService = require("../utils/smsService");
+const historialModel = require("./historialModel");
+const accesosModel = require("./accesosModel");
+const auditService = require("../utils/auditService");
 
 // ================================
 // CONTAR TURNOS ABIERTOS
@@ -105,7 +108,7 @@ const createTurno = async (turno) => {
       
       await smsService.sendSMS({
         idTurno,
-        idConductor,
+        id_usuario: idConductor,
         celular,
         mensaje
       });
@@ -119,12 +122,21 @@ const createTurno = async (turno) => {
   }
   // -----------------------------------------
 
+  // --- Auditoría: turno creado ---
+  auditService.registrar({
+    usuarioId: null, // Los conductores no son empleados, se registra como acción de sistema/conductor
+    accion: "TURNO_CREADO",
+    tabla: "Turnos",
+    registroId: idTurno,
+    detalle: `Turno #${numTurnoFormateado} creado por conductor. Destino: ${toSentenceCase(destinoFinal)}`
+  });
+
   return {
     idTurno,
     idConductor,
     numeroTurno: numTurnoFormateado,
     estado: "Pendiente",
-    fecha: new Date().toISOString().split("T")[0],
+    fecha,
     destinoFinal: toSentenceCase(destinoFinal),
     tipoVisita: toSentenceCase(tipoVisita),
   };
@@ -134,9 +146,17 @@ const createTurno = async (turno) => {
 // ACTUALIZAR TURNO
 // ================================
 const updateTurno = async (id, turno) => {
-  const { estado, puedePasar, motivo, salaConductores, observaciones, destinoFinal } = turno;
+  const { estado, puedePasar, motivo, salaConductores, observaciones, destinoFinal, idUsuario } = turno;
   console.log("ACTUALIZANDO TURNO:", { id, estado, puedePasar, motivo, salaConductores, observaciones, destinoFinal });
-  
+
+  // Obtener estado anterior para el historial y notificaciones
+  const [[turnoActual]] = await pool.query(
+    "SELECT estado, puedePasar FROM Turnos WHERE idTurno = ?",
+    [id]
+  );
+  const estadoAnterior = turnoActual?.estado || null;
+  const puedePasarAnterior = turnoActual?.puedePasar || 0;
+
   await pool.query(
     `UPDATE Turnos 
      SET estado=?, puedePasar=?, motivo=?, salaConductores=?, observaciones=?, destinoFinal=? 
@@ -144,11 +164,53 @@ const updateTurno = async (id, turno) => {
     [estado, puedePasar, toSentenceCase(motivo), salaConductores, toSentenceCase(observaciones), toSentenceCase(destinoFinal), id]
   );
 
-  // --- SIMULAR NOTIFICACIÓN SMS AL LLAMAR (Si puedePasar es 'SI') ---
-  if (puedePasar === 'SI' || puedePasar === 'Si' || puedePasar === 1 || puedePasar === '1') {
+  // --- HISTORIAL DE ESTADOS ---
+  if (estadoAnterior !== estado) {
+    historialModel.registrarCambio({
+      idTurno: id,
+      estadoAnterior,
+      estadoNuevo: estado,
+      usuarioResponsable: idUsuario || null,
+      observaciones: observaciones || null
+    });
+
+    // --- ACCESOS: ingreso al entrar, salida al irse ---
+    if (estado === "Atendido") {
+      accesosModel.registrarIngreso({
+        idTurno: id,
+        idEmpleadoAutorizante: idUsuario || null
+      });
+    } else if (estado === "Salió" || estado === "Cancelado") {
+      accesosModel.registrarSalida({ idTurno: id });
+    }
+
+    // --- AUDITORÍA ---
+    auditService.registrar({
+      usuarioId: idUsuario || null,
+      accion: "TURNO_ACTUALIZADO",
+      tabla: "Turnos",
+      registroId: id,
+      detalle: `Estado: ${estadoAnterior} → ${estado}`
+    });
+  }
+
+  // --- SIMULAR NOTIFICACIÓN SMS AL ACTIVAR "PUEDE PASAR" ---
+  // Se activa si antes era 0/No y ahora es 1/Si
+  const antesNoPodia = !puedePasarAnterior || puedePasarAnterior == '0' || puedePasarAnterior == 'NO' || puedePasarAnterior == 'No';
+  const ahoraSiPuede = puedePasar == '1' || puedePasar == 1 || puedePasar == 'SI' || puedePasar == 'Si' || puedePasar === true;
+
+  console.log("DEBUG NOTIFICACIÓN SMS:", { 
+    id, 
+    antesNoPodia, 
+    ahoraSiPuede, 
+    puedePasarAnterior, 
+    puedePasarRecibido: puedePasar 
+  });
+
+  if (antesNoPodia && ahoraSiPuede) {
     try {
       const [dataRows] = await pool.query(
-        `SELECT c.celular, c.nombreCompleto, t.numeroTurno 
+        `SELECT c.celular, c.nombreCompleto, t.numeroTurno, t.idConductor 
          FROM Turnos t 
          JOIN Conductores c ON t.idConductor = c.idConductor 
          WHERE t.idTurno = ?`,
@@ -156,13 +218,13 @@ const updateTurno = async (id, turno) => {
       );
 
       if (dataRows.length > 0) {
-        const { celular, nombreCompleto, numeroTurno } = dataRows[0];
+        const { celular, nombreCompleto, numeroTurno, idConductor } = dataRows[0];
         const numTurnoFormateado = numeroTurno.toString().padStart(2, "0");
         const mensaje = `¡ATENCIÓN! ${nombreCompleto}, tu turno #${numTurnoFormateado} ya puede ingresar. Dirígete a portería.`;
         
         await smsService.sendSMS({
           idTurno: id,
-          idConductor: dataRows[0].idConductor,
+          id_usuario: idConductor,
           celular,
           mensaje
         });
@@ -206,7 +268,7 @@ async function obtenerResumenHoy(idConductor) {
 async function obtenerTurnosHoy() {
   const [rows] = await pool.query(
     `
-    SELECT numeroTurno, estado, placa
+    SELECT numeroTurno, estado, placa, horaAsignacion
     FROM Turnos
     WHERE fecha = ?
     ORDER BY numeroTurno ASC;

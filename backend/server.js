@@ -35,6 +35,8 @@ const authRoutes = require("./routes/authRoutes");
 const geoRoutes = require("./routes/geoRoutes");
 const statsRoutes = require("./routes/statsRoutes");
 const notificacionRoutes = require("./routes/notificacionRoutes");
+const auditoriaRoutes = require("./routes/auditoriaRoutes");
+const accesosRoutes = require("./routes/accesosRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/empleados", empleadosRoutes);
@@ -44,6 +46,8 @@ app.use("/api/roles", rolesRoutes);
 app.use("/api/geo", geoRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/notificaciones", notificacionRoutes);
+app.use("/api/auditoria", auditoriaRoutes);
+app.use("/api/accesos", accesosRoutes);
 
 // --- Endpoint de salud ---
 app.get("/health", (req, res) => {

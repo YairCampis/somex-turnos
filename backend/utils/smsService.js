@@ -8,7 +8,7 @@ const pool = require("../config/dbConfig");
  * PARA PRODUCCIÓN: 
  * Aquí es donde se integraría Twilio, o WhatsApp Business API.
  */
-const sendSMS = async ({ idTurno, idConductor, celular, mensaje }) => {
+const sendSMS = async ({ idTurno, id_usuario, celular, mensaje }) => {
   try {
     // 1. LÓGICA DE SIMULACIÓN (Base de datos)
     // El frontend (Simulador) lee de esta tabla
@@ -19,7 +19,7 @@ const sendSMS = async ({ idTurno, idConductor, celular, mensaje }) => {
 
     await pool.query(
       "INSERT INTO Notificaciones (id_turno, id_usuario, numero_celular, mensaje, tipo, receptor_tipo, estado, fecha_creacion) VALUES (?, ?, ?, ?, 'SMS', 'Conductor', 'pendiente', ?)",
-      [idTurno, idConductor, celular, mensaje, fecha]
+      [idTurno, id_usuario || null, celular, mensaje, fecha]
     );
 
     console.log(`[SMS SERVICE] Notificación encolada para ${celular}: ${mensaje.substring(0, 30)}...`);

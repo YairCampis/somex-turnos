@@ -14,6 +14,10 @@
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    />
     <link href="./assets/styles.css" rel="stylesheet" />
     <style>
       /* ── Fondo completo y nítido ── */
@@ -180,7 +184,16 @@
         }
 
         const turno = JSON.parse(turnoGuardado);
-        
+
+        // ── Verificar que el turno guardado sea de HOY ──
+        // Si no tiene fecha (formato viejo) o la fecha no es hoy → limpiar
+        const hoy = new Date().toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
+        if (!turno.fecha || turno.fecha !== hoy) {
+          localStorage.removeItem("turno");
+          mostrarSinTurno();
+          return;
+        }
+
         // Mostrar número local de inmediato para evitar el guión inicial
         if (turno.numeroTurno) {
           mostrarTurno(turno.numeroTurno);
@@ -223,8 +236,8 @@
           const turnos = data.turnos || [];
           const ultimoTurno = data.ultimoTurno;
 
-          // Incluir el estado en el string para detectar cambios (Pendiente -> Atendido)
-          const turnosString = JSON.stringify(turnos.map(t => ({ n: t.numeroTurno, e: t.estado }))) + ultimoTurno;
+          // Incluir el estado y hora en el string para detectar cambios
+          const turnosString = JSON.stringify(turnos.map(t => ({ n: t.numeroTurno, e: t.estado, h: t.horaAsignacion }))) + ultimoTurno;
 
           // EVITA PARPADEO solo si no hay cambios reales
           if (turnosPrevios === turnosString) {
@@ -243,21 +256,38 @@
 
           turnos.forEach((t) => {
             const li = document.createElement("li");
-            li.className = "list-group-item d-flex justify-content-between align-items-center";
+            li.className = "list-group-item d-flex justify-content-between align-items-center p-3 shadow-sm";
             
             const numLabel = String(t.numeroTurno).padStart(2, "0");
-            const placaText = t.placa ? ` - Placa ${t.placa}` : " - <small class='text-muted'>Sin placa</small>";
+            const horaStr = t.horaAsignacion ? t.horaAsignacion.substring(0, 5) : "--:--";
             
             let statusClass = 'bg-secondary';
             if(t.estado === 'Atendido') statusClass = 'bg-success';
             if(t.estado === 'Cancelado') statusClass = 'bg-danger';
 
             li.innerHTML = `
-              <div>
-                <span class="turno-header">Turno ${numLabel}</span>
-                <span class="placa-text">${placaText}</span>
+              <div class="d-flex align-items-center gap-3">
+                <div class="bg-success text-white rounded-3 p-2 text-center" style="min-width: 50px; box-shadow: 0 4px 10px rgba(25, 135, 84, 0.2);">
+                    <small class="d-block text-uppercase fw-bold" style="font-size: 0.6rem; opacity: 0.9;">Turno</small>
+                    <div class="fs-4 fw-bold" style="line-height: 1;">${numLabel}</div>
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-clock-fill text-success" style="font-size: 0.9rem;"></i>
+                        <span class="fw-bold fs-5 text-dark">${horaStr}</span>
+                    </div>
+                    <div class="text-muted d-flex align-items-center gap-1" style="font-size: 0.9rem;">
+                        <i class="bi bi-truck"></i>
+                        <span>Vehículo:</span>
+                        <span class="fw-bold text-dark text-uppercase">${t.placa || 'Sin placa'}</span>
+                    </div>
+                </div>
               </div>
-              <span class="badge status-badge ${statusClass}">${t.estado || "Pendiente"}</span>
+              <div class="text-end">
+                  <span class="badge ${statusClass} rounded-pill px-3 py-2 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                    ${t.estado || "Pendiente"}
+                  </span>
+              </div>
             `;
             lista.appendChild(li);
           });

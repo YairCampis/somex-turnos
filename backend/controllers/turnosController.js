@@ -1,6 +1,7 @@
 //turnosController.js
 
 const turnosModel = require("../models/turnosModel");
+const historialModel = require("../models/historialModel");
 
 const getAllTurnos = async (req, res) => {
   try {
@@ -115,6 +116,17 @@ const getAnalytics = async (req, res) => {
   }
 };
 
+const getHistorialTurno = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const historial = await historialModel.obtenerHistorial(id);
+    res.json(historial);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensaje: "Error obteniendo historial" });
+  }
+};
+
 module.exports = {
   getAllTurnos,
   createTurno,
@@ -124,4 +136,5 @@ module.exports = {
   getTurnoPorId,
   getReport,
   getAnalytics,
+  getHistorialTurno,
 };

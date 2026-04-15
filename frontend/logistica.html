@@ -627,13 +627,17 @@ function formatSentenceCase(input) {
 }
 
 async function guardarCambios() {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const idUsuario = user?.idEmpleado || user?.id || null;
+
   const data = {
     puedePasar: document.getElementById("dPuedePasar").checked ? 1 : 0,
     motivo: document.getElementById("dMotivo").value,
     salaConductores: document.getElementById("dSalaConductores").checked ? 1 : 0,
     observaciones: document.getElementById("dObs").value,
     destinoFinal: document.getElementById("dDestino").value,
-    estado: turnoActual.estado 
+    estado: turnoActual.estado,
+    idUsuario
   };
 
   const result = await api.put('/api/turnos/' + turnoActual.idTurno, data);
