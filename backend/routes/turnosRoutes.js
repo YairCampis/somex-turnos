@@ -10,6 +10,7 @@ router.put("/:id", turnosController.updateTurno);
 router.delete("/:id", turnosController.deleteTurno);
 router.get("/hoy/:idConductor", turnosController.turnosHoy);
 router.get("/turnos/:id", turnosController.getTurnoPorId);
+router.get("/historial/:id", turnosController.getHistorialTurno);
 router.get("/report", turnosController.getReport);
 router.get("/analytics", turnosController.getAnalytics);
 

@@ -2,6 +2,9 @@
 const pool = require("../config/dbConfig");
 const { toSentenceCase } = require("../utils/textUtils");
 const smsService = require("../utils/smsService");
+const historialModel = require("./historialModel");
+const accesosModel = require("./accesosModel");
+const auditService = require("../utils/auditService");
 
 // ================================
 // CONTAR TURNOS ABIERTOS
@@ -119,12 +122,21 @@ const createTurno = async (turno) => {
   }
   // -----------------------------------------
 
+  // --- Auditoría: turno creado ---
+  auditService.registrar({
+    usuarioId: null, // Los conductores no son empleados, se registra como acción de sistema/conductor
+    accion: "TURNO_CREADO",
+    tabla: "Turnos",
+    registroId: idTurno,
+    detalle: `Turno #${numTurnoFormateado} creado por conductor. Destino: ${toSentenceCase(destinoFinal)}`
+  });
+
   return {
     idTurno,
     idConductor,
     numeroTurno: numTurnoFormateado,
     estado: "Pendiente",
-    fecha: new Date().toISOString().split("T")[0],
+    fecha,
     destinoFinal: toSentenceCase(destinoFinal),
     tipoVisita: toSentenceCase(tipoVisita),
   };
@@ -134,15 +146,52 @@ const createTurno = async (turno) => {
 // ACTUALIZAR TURNO
 // ================================
 const updateTurno = async (id, turno) => {
-  const { estado, puedePasar, motivo, salaConductores, observaciones, destinoFinal } = turno;
+  const { estado, puedePasar, motivo, salaConductores, observaciones, destinoFinal, idUsuario } = turno;
   console.log("ACTUALIZANDO TURNO:", { id, estado, puedePasar, motivo, salaConductores, observaciones, destinoFinal });
-  
+
+  // Obtener estado anterior para el historial
+  const [[turnoActual]] = await pool.query(
+    "SELECT estado FROM Turnos WHERE idTurno = ?",
+    [id]
+  );
+  const estadoAnterior = turnoActual?.estado || null;
+
   await pool.query(
     `UPDATE Turnos 
      SET estado=?, puedePasar=?, motivo=?, salaConductores=?, observaciones=?, destinoFinal=? 
      WHERE idTurno=?`, 
     [estado, puedePasar, toSentenceCase(motivo), salaConductores, toSentenceCase(observaciones), toSentenceCase(destinoFinal), id]
   );
+
+  // --- HISTORIAL DE ESTADOS ---
+  if (estadoAnterior !== estado) {
+    historialModel.registrarCambio({
+      idTurno: id,
+      estadoAnterior,
+      estadoNuevo: estado,
+      usuarioResponsable: idUsuario || null,
+      observaciones: observaciones || null
+    });
+
+    // --- ACCESOS: ingreso al entrar, salida al irse ---
+    if (estado === "Atendido") {
+      accesosModel.registrarIngreso({
+        idTurno: id,
+        idEmpleadoAutorizante: idUsuario || null
+      });
+    } else if (estado === "Salió" || estado === "Cancelado") {
+      accesosModel.registrarSalida({ idTurno: id });
+    }
+
+    // --- AUDITORÍA ---
+    auditService.registrar({
+      usuarioId: idUsuario || null,
+      accion: "TURNO_ACTUALIZADO",
+      tabla: "Turnos",
+      registroId: id,
+      detalle: `Estado: ${estadoAnterior} → ${estado}`
+    });
+  }
 
   // --- SIMULAR NOTIFICACIÓN SMS AL LLAMAR (Si puedePasar es 'SI') ---
   if (puedePasar === 'SI' || puedePasar === 'Si' || puedePasar === 1 || puedePasar === '1') {
@@ -162,7 +211,7 @@ const updateTurno = async (id, turno) => {
         
         await smsService.sendSMS({
           idTurno: id,
-          idConductor: dataRows[0].idConductor,
+          idUsuario: idUsuario || null, // Se pasa el usuario responsable del llamado
           celular,
           mensaje
         });

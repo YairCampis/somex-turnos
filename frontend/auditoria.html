@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Auditoría del Sistema - SOMEX</title>
+  <meta name="description" content="Log de actividad del sistema SOMEX — auditoría de acciones por usuario">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+
+    body {
+      background: #f0f4f8;
+      color: #1e293b;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .top-bar {
+      background: linear-gradient(135deg, #1e5c1a 0%, #2f8f2f 100%);
+      color: white;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .top-bar h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .back-btn {
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.25); }
+
+    /* ── FILTROS ── */
+    .filtros-card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      margin-bottom: 20px;
+    }
+
+    .filtros-card label {
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #64748b;
+      letter-spacing: 0.4px;
+    }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .stat-pill {
+      background: white;
+      border-radius: 10px;
+      padding: 12px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 160px;
+    }
+
+    .stat-pill .icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .stat-pill .num {
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .stat-pill .lbl {
+      font-size: 0.75rem;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    /* ── TABLA ── */
+    .audit-table-wrapper {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+
+    .audit-table-wrapper table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    thead th {
+      background: #f8fafc;
+      padding: 12px 16px;
+      font-size: 0.73rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      border-bottom: 1px solid #e2e8f0;
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid #f1f5f9;
+      transition: background 0.1s;
+    }
+
+    tbody tr:hover { background: #f8fafc; }
+    tbody tr:last-child { border-bottom: none; }
+
+    tbody td {
+      padding: 12px 16px;
+      color: #334155;
+      vertical-align: middle;
+    }
+
+    .accion-badge {
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .accion-TURNO_CREADO      { background: #dcfce7; color: #166534; }
+    .accion-TURNO_ACTUALIZADO { background: #dbeafe; color: #1e40af; }
+    .accion-TURNO_CANCELADO   { background: #fee2e2; color: #991b1b; }
+    .accion-LOGIN             { background: #fef3c7; color: #92400e; }
+    .accion-default           { background: #f1f5f9; color: #475569; }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #94a3b8;
+    }
+
+    .empty-state i { font-size: 48px; margin-bottom: 12px; display: block; }
+
+    /* ── SPINNER ── */
+    .spinner-overlay {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="top-bar">
+  <h1><i class="bi bi-shield-lock"></i> Auditoría del Sistema</h1>
+  <button class="back-btn" onclick="history.back()">
+    <i class="bi bi-arrow-left"></i> Volver
+  </button>
+</div>
+
+<div class="container-fluid p-4">
+
+  <!-- FILTROS -->
+  <div class="filtros-card">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label>Acción</label>
+        <select id="filtroAccion" class="form-select form-select-sm">
+          <option value="">Todas las acciones</option>
+          <option value="TURNO_CREADO">Turno Creado</option>
+          <option value="TURNO_ACTUALIZADO">Turno Actualizado</option>
+          <option value="TURNO_CANCELADO">Turno Cancelado</option>
+          <option value="LOGIN">Login</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label>Usuario</label>
+        <select id="filtroUsuario" class="form-select form-select-sm">
+          <option value="">Todos los usuarios</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label>Desde</label>
+        <input type="date" id="filtroDesde" class="form-control form-control-sm">
+      </div>
+      <div class="col-md-2">
+        <label>Hasta</label>
+        <input type="date" id="filtroHasta" class="form-control form-control-sm">
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button class="btn btn-success btn-sm flex-grow-1" onclick="cargarAuditoria()">
+          <i class="bi bi-search"></i> Buscar
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltros()">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat-pill">
+      <div class="icon" style="background:#dcfce7; color:#166534;"><i class="bi bi-list-check"></i></div>
+      <div>
+        <div class="num" id="statTotal">—</div>
+        <div class="lbl">Total registros</div>
+      </div>
+    </div>
+    <div class="stat-pill">
+      <div class="icon" style="background:#dbeafe; color:#1e40af;"><i class="bi bi-pencil-square"></i></div>
+      <div>
+        <div class="num" id="statActualizados">—</div>
+        <div class="lbl">Turnos actualizados</div>
+      </div>
+    </div>
+    <div class="stat-pill">
+      <div class="icon" style="background:#fef3c7; color:#92400e;"><i class="bi bi-plus-circle"></i></div>
+      <div>
+        <div class="num" id="statCreados">—</div>
+        <div class="lbl">Turnos creados</div>
+      </div>
+    </div>
+    <div class="stat-pill">
+      <div class="icon" style="background:#f1f5f9; color:#475569;"><i class="bi bi-people"></i></div>
+      <div>
+        <div class="num" id="statUsuarios">—</div>
+        <div class="lbl">Usuarios activos</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLA -->
+  <div class="audit-table-wrapper">
+    <div id="tableBody">
+      <div class="spinner-overlay">
+        <div class="spinner-border text-success" role="status"></div>
+        <div class="mt-2">Cargando registros...</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="assets/js/api.js"></script>
+<script>
+  const API_BASE = localStorage.getItem("API_BASE") || "http://localhost:4000";
+
+  async function cargarUsuarios() {
+    try {
+      const res = await fetch(`${API_BASE}/api/auditoria/usuarios`);
+      const lista = await res.json();
+      const sel = document.getElementById("filtroUsuario");
+      lista.forEach(u => {
+        const opt = document.createElement("option");
+        opt.value = u.idEmpleado;
+        opt.textContent = u.nombreCompleto;
+        sel.appendChild(opt);
+      });
+    } catch (e) { console.error(e); }
+  }
+
+  async function cargarAuditoria() {
+    const accion   = document.getElementById("filtroAccion").value;
+    const usuario  = document.getElementById("filtroUsuario").value;
+    const desde    = document.getElementById("filtroDesde").value;
+    const hasta    = document.getElementById("filtroHasta").value;
+
+    const params = new URLSearchParams();
+    if (accion)  params.append("accion", accion);
+    if (usuario) params.append("usuarioId", usuario);
+    if (desde)   params.append("desde", desde);
+    if (hasta)   params.append("hasta", hasta);
+
+    document.getElementById("tableBody").innerHTML = `
+      <div class="spinner-overlay">
+        <div class="spinner-border text-success" role="status"></div>
+        <div class="mt-2">Cargando...</div>
+      </div>`;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/auditoria?${params}`);
+      const data = await res.json();
+      renderTabla(data);
+      actualizarStats(data);
+    } catch (e) {
+      document.getElementById("tableBody").innerHTML = `
+        <div class="empty-state"><i class="bi bi-exclamation-circle"></i>Error al cargar datos</div>`;
+    }
+  }
+
+  function renderTabla(data) {
+    if (!data.length) {
+      document.getElementById("tableBody").innerHTML = `
+        <div class="empty-state">
+          <i class="bi bi-inbox"></i>
+          No hay registros con los filtros aplicados
+        </div>`;
+      return;
+    }
+
+    const rows = data.map(r => {
+      const accionClass = `accion-${r.accion}` in document.styleSheets[0]
+        ? `accion-${r.accion}` : "accion-default";
+      const fecha = new Date(r.fecha).toLocaleString("es-CO", { timeZone: "America/Bogota" });
+      return `
+        <tr>
+          <td><span style="font-size:0.75rem; color:#94a3b8;">${fecha}</span></td>
+          <td><strong>${r.usuario || '<span class="text-muted">Sistema</span>'}</strong></td>
+          <td><span class="accion-badge accion-${r.accion}">${r.accion.replace(/_/g, ' ')}</span></td>
+          <td><span class="badge bg-light text-dark fw-bold" style="font-size:0.8rem;">${r.numeroTurno ? '#' + r.numeroTurno : '—'}</span></td>
+          <td><span class="badge bg-secondary" style="font-size:0.75rem;">${r.placa || '—'}</span></td>
+          <td style="max-width:300px; font-size:0.82rem;">${r.detalle || '—'}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById("tableBody").innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th><i class="bi bi-clock me-1"></i>Fecha y Hora</th>
+            <th><i class="bi bi-person me-1"></i>Usuario</th>
+            <th><i class="bi bi-lightning me-1"></i>Acción</th>
+            <th><i class="bi bi-hash me-1"></i>Turno</th>
+            <th><i class="bi bi-truck me-1"></i>Placa</th>
+            <th><i class="bi bi-chat-left-text me-1"></i>Detalle</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  function actualizarStats(data) {
+    document.getElementById("statTotal").textContent = data.length;
+    document.getElementById("statActualizados").textContent =
+      data.filter(r => r.accion === "TURNO_ACTUALIZADO").length;
+    document.getElementById("statCreados").textContent =
+      data.filter(r => r.accion === "TURNO_CREADO").length;
+    const usuarios = new Set(data.map(r => r.usuario).filter(Boolean));
+    document.getElementById("statUsuarios").textContent = usuarios.size;
+  }
+
+  function limpiarFiltros() {
+    document.getElementById("filtroAccion").value = "";
+    document.getElementById("filtroUsuario").value = "";
+    document.getElementById("filtroDesde").value = "";
+    document.getElementById("filtroHasta").value = "";
+    cargarAuditoria();
+  }
+
+  // Inicializar
+  cargarUsuarios();
+  cargarAuditoria();
+</script>
+</body>
+</html>

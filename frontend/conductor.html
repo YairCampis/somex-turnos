@@ -180,7 +180,16 @@
         }
 
         const turno = JSON.parse(turnoGuardado);
-        
+
+        // ── Verificar que el turno guardado sea de HOY ──
+        // Si no tiene fecha (formato viejo) o la fecha no es hoy → limpiar
+        const hoy = new Date().toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
+        if (!turno.fecha || turno.fecha !== hoy) {
+          localStorage.removeItem("turno");
+          mostrarSinTurno();
+          return;
+        }
+
         // Mostrar número local de inmediato para evitar el guión inicial
         if (turno.numeroTurno) {
           mostrarTurno(turno.numeroTurno);
