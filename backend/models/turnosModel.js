@@ -149,6 +149,7 @@ const updateTurno = async (id, turno) => {
   const { estado, puedePasar, motivo, salaConductores, observaciones, destinoFinal, idUsuario } = turno;
   console.log("ACTUALIZANDO TURNO:", { id, estado, puedePasar, motivo, salaConductores, observaciones, destinoFinal });
 
+<<<<<<< HEAD
   // Obtener estado anterior para el historial y notificaciones
   const [[turnoActual]] = await pool.query(
     "SELECT estado, puedePasar FROM Turnos WHERE idTurno = ?",
@@ -156,6 +157,14 @@ const updateTurno = async (id, turno) => {
   );
   const estadoAnterior = turnoActual?.estado || null;
   const puedePasarAnterior = turnoActual?.puedePasar || 0;
+=======
+  // Obtener estado anterior para el historial
+  const [[turnoActual]] = await pool.query(
+    "SELECT estado FROM Turnos WHERE idTurno = ?",
+    [id]
+  );
+  const estadoAnterior = turnoActual?.estado || null;
+>>>>>>> 445f447b4c22407fb2964754d0459f214b31de2b
 
   await pool.query(
     `UPDATE Turnos 
@@ -194,6 +203,7 @@ const updateTurno = async (id, turno) => {
     });
   }
 
+<<<<<<< HEAD
   // --- SIMULAR NOTIFICACIÓN SMS AL ACTIVAR "PUEDE PASAR" ---
   // Se activa si antes era 0/No y ahora es 1/Si
   const antesNoPodia = !puedePasarAnterior || puedePasarAnterior == '0' || puedePasarAnterior == 'NO' || puedePasarAnterior == 'No';
@@ -208,6 +218,10 @@ const updateTurno = async (id, turno) => {
   });
 
   if (antesNoPodia && ahoraSiPuede) {
+=======
+  // --- SIMULAR NOTIFICACIÓN SMS AL LLAMAR (Si puedePasar es 'SI') ---
+  if (puedePasar === 'SI' || puedePasar === 'Si' || puedePasar === 1 || puedePasar === '1') {
+>>>>>>> 445f447b4c22407fb2964754d0459f214b31de2b
     try {
       const [dataRows] = await pool.query(
         `SELECT c.celular, c.nombreCompleto, t.numeroTurno, t.idConductor 
@@ -224,7 +238,11 @@ const updateTurno = async (id, turno) => {
         
         await smsService.sendSMS({
           idTurno: id,
+<<<<<<< HEAD
           id_usuario: idConductor,
+=======
+          idUsuario: idUsuario || null, // Se pasa el usuario responsable del llamado
+>>>>>>> 445f447b4c22407fb2964754d0459f214b31de2b
           celular,
           mensaje
         });
